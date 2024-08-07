@@ -10,15 +10,16 @@ const morgan = require("morgan");
 const connectDB = require("./db/connectDB");
 
 //routes importations
-
+const usersRoute = require("./route/authRoute");
 //middlewares importations
 const notFoundMiddleware = require("./middleware/note-found");
 const errorHandlerMiddleware = require("./middleware/error-handler");
 //middlewares initialization
-app.use(morgan("tiny")); //to see the
+app.use(morgan("tiny")); //to see the hit route in the console
+app.use(express.json()); // to get json form of res
 
 //route initialization
-
+app.use("/api/auth", usersRoute);
 //errors initialization
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
