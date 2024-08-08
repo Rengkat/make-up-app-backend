@@ -5,7 +5,7 @@ const app = express();
 
 //rest of packages importations
 const morgan = require("morgan");
-
+const cookieParser = require("cookie-parser");
 //database
 const connectDB = require("./db/connectDB");
 
@@ -17,6 +17,7 @@ const errorHandlerMiddleware = require("./middleware/error-handler");
 //middlewares initialization
 app.use(morgan("tiny")); //to see the hit route in the console
 app.use(express.json()); // to get json form of res
+app.use(cookieParser(process.env.JWT_SECRET));
 
 //route initialization
 app.use("/api/auth", usersRoute);

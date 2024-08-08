@@ -34,7 +34,7 @@ const UserSchema = new mongoose.Schema({
       message: "Enter a stronger password",
     },
   },
-  isAdmin: {
+  role: {
     type: String,
     default: "user",
     enum: ["admin", "user"],
