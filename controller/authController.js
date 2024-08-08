@@ -3,6 +3,7 @@ const StatusCodes = require("http-status-codes");
 const CustomError = require("../errors/index");
 const { attachTokenToResponse } = require("../utils");
 const createUserPayload = require("../utils/createUserPayload");
+// const { token } = require("morgan");
 
 const registerUser = async (req, res, next) => {
   try {
@@ -16,9 +17,10 @@ const registerUser = async (req, res, next) => {
 
     const user = await User.create({ email, firstName, surname, password });
 
-    res.status(201).json({
+    res.status(StatusCodes.CREATED).json({
       success: true,
       data: user,
+      message: "Successfully registered",
     });
   } catch (err) {
     next(err); // Pass the error to the error handler
@@ -43,7 +45,16 @@ const loginUser = async (req, res) => {
   const userPayload = createUserPayload(user);
   attachTokenToResponse({ res, userPayload });
 
-  res.status(StatusCodes.OK).json({ success: true, user: userPayload });
+  res
+    .status(StatusCodes.OK)
+    .json({ success: true, user: userPayload, message: "Successfully logged in" });
 };
-const logoutUser = (req, res) => {};
+const logoutUser = (req, res) => {
+  res.cookie("token", "", {
+    httpOnly: true,
+    expires: new Date(0),
+  });
+  res.status(StatusCodes.OK).json({ success: true, message: "Logged out successfully" });
+};
+
 module.exports = { registerUser, loginUser, logoutUser };
