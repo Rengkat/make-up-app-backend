@@ -21,6 +21,7 @@ const registerUser = async (req, res, next) => {
   } catch (err) {
     next(err); // Pass the error to the error handler
   }
+  ("");
 };
 const loginUser = (req, res) => {};
 const logoutUser = (req, res) => {};
