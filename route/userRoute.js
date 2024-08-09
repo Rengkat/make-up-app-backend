@@ -8,9 +8,10 @@ const {
   updateUserPassword,
   updateCurrentUser,
 } = require("../controller/userController");
+const { authenticateUser, authorizationPermission } = require("../middleware/authentication");
 
 const router = express.Router();
-router.get("/", getAllUsers);
+router.get("/", authenticateUser, authorizationPermission, getAllUsers);
 router.get("/profile", getCurrentUserProfile);
 router.route("/:id").get(getSingleUser).patch(updateUser).delete(deleteUser);
 router.patch("/updatePassword", updateUserPassword);

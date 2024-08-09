@@ -3,15 +3,22 @@ const { isTokenVerified } = require("../utils");
 const authenticateUser = (req, res, next) => {
   const token = req.signedCookies.token;
   if (!token) {
-    CustomError.UnauthenticatedError("Authentication invalid");
+    throw new CustomError.UnauthenticatedError("Authentication invalid");
   }
   try {
     const { firstName, surname, id, role } = isTokenVerified({ token });
-    console.log({ firstName, surname, id, role });
     req.user = { firstName, surname, id, role };
     next();
   } catch (error) {
     throw new CustomError.UnauthenticatedError("Authentication invalid");
   }
 };
-module.exports = authenticateUser;
+const authorizationPermission = (req, res, next) => {
+  if (req.user && req.user.role === "admin") {
+    return next();
+  }
+  const error = new CustomError.UnauthorizedError("You are not authorized to access this route");
+  next(error);
+};
+
+module.exports = { authenticateUser, authorizationPermission };
