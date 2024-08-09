@@ -3,23 +3,20 @@ const StatusCodes = require("http-status-codes");
 const CustomError = require("../errors/index");
 const { attachTokenToResponse } = require("../utils");
 const createUserPayload = require("../utils/createUserPayload");
-// const { token } = require("morgan");
 
 const registerUser = async (req, res, next) => {
   try {
     const { email, firstName, surname, password } = req.body;
 
-    // Check if email already exists
     const emailExists = await User.findOne({ email });
     if (emailExists) {
       throw new CustomError.BadRequestError("Email already exists");
     }
 
-    const user = await User.create({ email, firstName, surname, password });
+    await User.create({ email, firstName, surname, password });
 
     res.status(StatusCodes.CREATED).json({
       success: true,
-
       message: "Successfully registered",
     });
   } catch (err) {
