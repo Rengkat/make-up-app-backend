@@ -11,7 +11,8 @@ const cors = require("cors");
 const connectDB = require("./db/connectDB");
 
 //routes importations
-const usersRoute = require("./route/authRoute");
+const authRoute = require("./route/authRoute");
+const userRoute = require("./route/userRoute");
 //middlewares importations
 const notFoundMiddleware = require("./middleware/note-found");
 const errorHandlerMiddleware = require("./middleware/error-handler");
@@ -28,7 +29,8 @@ app.use(
 );
 
 //route initialization
-app.use("/api/auth", usersRoute);
+app.use("/api/auth", authRoute);
+app.use("/api/user", userRoute);
 //errors initialization
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
