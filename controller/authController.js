@@ -19,7 +19,7 @@ const registerUser = async (req, res, next) => {
 
     res.status(StatusCodes.CREATED).json({
       success: true,
-      data: user,
+
       message: "Successfully registered",
     });
   } catch (err) {
@@ -27,34 +27,46 @@ const registerUser = async (req, res, next) => {
   }
   ("");
 };
-const loginUser = async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password)
-    throw new CustomError.BadRequestError("Please provide email and password");
-  const user = await User.findOne({ email });
-  if (!user) {
-    throw new CustomError.UnauthenticatedError("Invalid credentials");
-  }
-  const isPasswordCorrect = await user.comparePassword(password);
-  //   or use
-  // if(user && (await user.comparePassword(password))){}
-  if (!isPasswordCorrect) {
-    throw new CustomError.UnauthenticatedError("Please enter valid credentials");
-  }
-  //to create payload instead of user._id, user.name, user.role
-  const userPayload = createUserPayload(user);
-  attachTokenToResponse({ res, userPayload });
+const loginUser = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
 
-  res
-    .status(StatusCodes.OK)
-    .json({ success: true, user: userPayload, message: "Successfully logged in" });
+    if (!email || !password) {
+      throw new CustomError.BadRequestError("Please provide email and password");
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw new CustomError.UnauthenticatedError("Invalid credentials");
+    }
+
+    const isPasswordCorrect = await user.comparePassword(password);
+    if (!isPasswordCorrect) {
+      throw new CustomError.UnauthenticatedError("Please enter valid credentials");
+    }
+
+    const userPayload = createUserPayload(user);
+    attachTokenToResponse({ res, userPayload });
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      user: userPayload,
+      message: "Successfully logged in",
+    });
+  } catch (error) {
+    next(error); // Pass the error to the next middleware
+  }
 };
-const logoutUser = (req, res) => {
-  res.cookie("token", "", {
-    httpOnly: true,
-    expires: new Date(0),
-  });
-  res.status(StatusCodes.OK).json({ success: true, message: "Logged out successfully" });
+const logoutUser = (req, res, next) => {
+  try {
+    res.cookie("token", "", {
+      httpOnly: true,
+      expires: new Date(0),
+    });
+    res.status(StatusCodes.OK).json({ success: true, message: "Logged out successfully" });
+  } catch (error) {
+    next(error);
+  }
 };
 
 module.exports = { registerUser, loginUser, logoutUser };

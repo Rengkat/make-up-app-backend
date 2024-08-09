@@ -6,6 +6,7 @@ const app = express();
 //rest of packages importations
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
+const cors = require("cors");
 //database
 const connectDB = require("./db/connectDB");
 
@@ -18,6 +19,13 @@ const errorHandlerMiddleware = require("./middleware/error-handler");
 app.use(morgan("tiny")); //to see the hit route in the console
 app.use(express.json()); // to get json form of res
 app.use(cookieParser(process.env.JWT_SECRET));
+// app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000", // Replace with your frontend port
+    credentials: true, // Allows cookies to be sent with requests
+  })
+);
 
 //route initialization
 app.use("/api/auth", usersRoute);
