@@ -18,6 +18,6 @@ router.patch("/updateCurrentUser", authenticateUser, updateCurrentUser);
 router
   .route("/:userId")
   .get(authenticateUser, authorizationPermission, getSingleUser)
-  .patch(updateUser)
-  .delete(deleteUser);
+  .patch(authenticateUser, authorizationPermission, updateUser)
+  .delete(authenticateUser, authorizationPermission, deleteUser);
 module.exports = router;

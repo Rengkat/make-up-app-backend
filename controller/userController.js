@@ -88,7 +88,16 @@ const updateCurrentUser = async (req, res, next) => {
     next(error);
   }
 };
-const deleteUser = (req, res, next) => {};
+const deleteUser = async (req, res) => {
+  const userId = req.params.userId;
+  const user = await User.findByIdAndDelete(userId);
+
+  if (!user) {
+    return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: "User not found" });
+  }
+
+  res.status(StatusCodes.OK).json({ success: true, message: "User successfully deleted" });
+};
 const updateUserPassword = (req, res, next) => {};
 module.exports = {
   getAllUsers,
