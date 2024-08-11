@@ -13,7 +13,11 @@ const { authenticateUser, authorizationPermission } = require("../middleware/aut
 const router = express.Router();
 router.get("/", authenticateUser, authorizationPermission, getAllUsers);
 router.get("/profile", authenticateUser, getCurrentUserProfile);
-router.route("/:id").get(getSingleUser).patch(updateUser).delete(deleteUser);
 router.patch("/updatePassword", updateUserPassword);
-router.patch("/updateCurrentUser", updateCurrentUser);
+router.patch("/updateCurrentUser", authenticateUser, updateCurrentUser);
+router
+  .route("/:userId")
+  .get(authenticateUser, authorizationPermission, getSingleUser)
+  .patch(updateUser)
+  .delete(deleteUser);
 module.exports = router;
