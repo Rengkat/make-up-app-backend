@@ -1,5 +1,9 @@
 const mongoose = require("mongoose");
 const AppointmentSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+  },
   date: {
     type: Date,
     required: true,
@@ -24,5 +28,27 @@ const AppointmentSchema = new mongoose.Schema({
     enum: ["spa", "home service"],
     required: true,
   },
+  status: {
+    type: String,
+    enum: ["pending", "delivered", "cancelled"],
+    default: "pending",
+  },
+  notes: {
+    type: String,
+    maxlength: 500, // Optional field for any additional notes
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+bookingSchema.pre("save", async function (next) {
+  this.updatedAt = Date.now();
+  next();
 });
 module.exports = mongoose.model("Appointment", AppointmentSchema);

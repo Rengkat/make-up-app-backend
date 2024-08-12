@@ -1,4 +1,7 @@
-const getAllAppointments = async (req, res, next) => {};
+const bookAppointment = async (req, res, next) => {};
+const getAllAppointments = async (req, res, next) => {
+  res.send("Hello");
+};
 const getUserAppointments = async (req, res, next) => {};
 const getSingleAppointment = async (req, res, next) => {};
 const updateAppointment = async (req, res, next) => {};
@@ -9,4 +12,5 @@ module.exports = {
   getUserAppointments,
   updateAppointment,
   deleteAppointment,
+  bookAppointment,
 };

@@ -13,6 +13,7 @@ const connectDB = require("./db/connectDB");
 //routes importations
 const authRoute = require("./route/authRoute");
 const userRoute = require("./route/userRoute");
+const appointmentRoute = require("./route/appointmentRouter");
 //middlewares importations
 const notFoundMiddleware = require("./middleware/note-found");
 const errorHandlerMiddleware = require("./middleware/error-handler");
@@ -31,6 +32,7 @@ app.use(
 //route initialization
 app.use("/api/auth", authRoute);
 app.use("/api/users", userRoute);
+app.use("/api/appointments", appointmentRoute);
 //errors initialization
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
