@@ -7,8 +7,12 @@ const {
   deleteAppointment,
   bookAppointment,
 } = require("../controller/appointmentController");
+const { authenticateUser, authorizationPermission } = require("../middleware/authentication");
 const router = express.Router();
-router.route("/").post(bookAppointment).get(getAllAppointments);
+router
+  .route("/")
+  .post(authenticateUser, bookAppointment)
+  .get(authenticateUser, authorizationPermission, getAllAppointments);
 router
   .route("/:id")
   .get(getSingleAppointment)

@@ -75,7 +75,7 @@ const updateCurrentUser = async (req, res, next) => {
     user.email = email !== undefined ? email : user.email;
 
     await user.save();
-    console.log(user);
+
     const userPayload = createUserPayload(user);
     attachTokenToResponse({ res, userPayload });
 

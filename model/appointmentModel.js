@@ -21,6 +21,49 @@ const AppointmentSchema = new mongoose.Schema({
   },
   service: {
     type: String,
+    enum: [
+      "Swedish Massage",
+      "Deep Tissue Massage",
+      "Hot Stone Massage",
+      "Aromatherapy Massage",
+      "Thai Massage",
+      "Shiatsu Massage",
+      "Reflexology Massage",
+      "Prenatal Massage",
+      "Sports Massage",
+      "Oxygen Facials",
+      "LED Facials",
+      "Microdermabrasion Facials",
+      "Chemical Peel Facials",
+      "Anti-Aging Facials",
+      "Hydrating Facials",
+      "Acne Treatment Facials",
+      "Body Mud Masks",
+      "Body Wraps",
+      "Sauna Relax",
+      "Detoxifying Body Treatments",
+      "Nutritionist Consultation",
+      "Facials and Hand Manicure Only",
+      "Facials and Toe Manicure Only",
+      "Facials, Hand and Toe Manicure",
+      "Only Facials",
+      "Basic Manicure",
+      "Spa Manicure",
+      "Gel Manicure",
+      "Nail Art",
+      "Basic Pedicure",
+      "Spa Pedicure",
+      "Paraffin Wax Treatment",
+      "Bridal Makeup",
+      "Event Makeup",
+      "Day Makeup",
+      "Evening Makeup",
+      "Makeup Consultation",
+      "Eyebrow Shaping",
+      "Eyelash Extensions",
+      "Brow and Lash Tinting",
+      "Makeup Lesson",
+    ],
     required: true,
   },
   type: {
@@ -33,10 +76,7 @@ const AppointmentSchema = new mongoose.Schema({
     enum: ["pending", "delivered", "cancelled"],
     default: "pending",
   },
-  notes: {
-    type: String,
-    maxlength: 500, // Optional field for any additional notes
-  },
+
   createdAt: {
     type: Date,
     default: Date.now,
@@ -47,7 +87,7 @@ const AppointmentSchema = new mongoose.Schema({
   },
 });
 
-bookingSchema.pre("save", async function (next) {
+AppointmentSchema.pre("save", function (next) {
   this.updatedAt = Date.now();
   next();
 });
