@@ -14,6 +14,7 @@ const connectDB = require("./db/connectDB");
 const authRoute = require("./route/authRoute");
 const userRoute = require("./route/userRoute");
 const appointmentRoute = require("./route/appointmentRouter");
+const categoryRoute = require("./route/categoryRoute");
 //middlewares importations
 const notFoundMiddleware = require("./middleware/note-found");
 const errorHandlerMiddleware = require("./middleware/error-handler");
@@ -33,6 +34,7 @@ app.use(
 app.use("/api/auth", authRoute);
 app.use("/api/users", userRoute);
 app.use("/api/appointments", appointmentRoute);
+app.use("/api/categories", categoryRoute);
 //errors initialization
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
@@ -44,6 +46,7 @@ const start = async () => {
     app.listen(port, () => console.log(`Server is running on port ${port}...`));
   } catch (error) {
     console.log(error.message);
+    process.exit(1);
   }
 };
 start();

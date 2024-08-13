@@ -3,11 +3,11 @@ const {
   addCategory,
   getAllCategories,
   getSingleCategory,
-  updateCategory,
   deleteCategory,
 } = require("../controller/categoryController");
+const { authenticateUser, authorizationPermission } = require("../middleware/authentication");
 const router = express.Router();
-router.post("/", addCategory);
+router.post("/", authenticateUser, authorizationPermission, addCategory);
 router.get("/", getAllCategories);
-router.route("/:id").get(getSingleCategory).patch(updateCategory).delete(deleteCategory);
+router.route("/:id").get(getSingleCategory).delete(deleteCategory);
 module.exports = router;
