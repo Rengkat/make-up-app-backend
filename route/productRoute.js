@@ -17,3 +17,4 @@ router
   .get(getSingleProduct)
   .patch(authenticateUser, authorizationPermission, updateProduct)
   .delete(authenticateUser, authorizationPermission, deleteProduct);
+module.exports = router;

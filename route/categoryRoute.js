@@ -9,5 +9,8 @@ const { authenticateUser, authorizationPermission } = require("../middleware/aut
 const router = express.Router();
 router.post("/", authenticateUser, authorizationPermission, addCategory);
 router.get("/", getAllCategories);
-router.route("/:id").get(getSingleCategory).delete(deleteCategory);
+router
+  .route("/:id")
+  .get(getSingleCategory)
+  .delete(authenticateUser, authorizationPermission, deleteCategory);
 module.exports = router;
