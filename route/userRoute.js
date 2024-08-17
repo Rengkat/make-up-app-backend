@@ -13,7 +13,7 @@ const { authenticateUser, authorizationPermission } = require("../middleware/aut
 const router = express.Router();
 router.get("/", authenticateUser, authorizationPermission, getAllUsers);
 router.get("/profile", authenticateUser, getCurrentUserProfile);
-router.patch("/updatePassword", updateUserPassword);
+router.patch("/updatePassword", authenticateUser, updateUserPassword);
 router.patch("/updateCurrentUser", authenticateUser, updateCurrentUser);
 router
   .route("/:userId")

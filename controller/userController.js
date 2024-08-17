@@ -98,7 +98,27 @@ const deleteUser = async (req, res) => {
 
   res.status(StatusCodes.OK).json({ success: true, message: "User successfully deleted" });
 };
-const updateUserPassword = (req, res, next) => {};
+const updateUserPassword = async (req, res, next) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    if (!oldPassword || !newPassword) {
+      throw new CustomError.BadRequestError("Please provide both values");
+    }
+
+    const user = await User.findById(req.user.id);
+    const isPasswordCorrect = await user.comparePassword(oldPassword);
+
+    if (!isPasswordCorrect) {
+      throw new CustomError.BadRequestError("Invalid credentials");
+    }
+    user.password = newPassword;
+    await user.save();
+    res.status(StatusCodes.OK).json({ message: "Your password has been updated", success: true });
+    res.send(user);
+  } catch (error) {
+    next(error);
+  }
+};
 module.exports = {
   getAllUsers,
   getCurrentUserProfile,
