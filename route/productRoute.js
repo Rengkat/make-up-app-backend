@@ -6,12 +6,14 @@ const {
   getSingleProduct,
   updateProduct,
   deleteProduct,
+  uploadImage,
 } = require("../controller/productController");
 const { authenticateUser, authorizationPermission } = require("../middleware/authentication");
 router
   .route("/")
   .get(getAllProducts)
   .post(authenticateUser, authorizationPermission, createProduct);
+router.route("/uploadImage").post(authenticateUser, authorizationPermission, uploadImage);
 router
   .route("/:id")
   .get(getSingleProduct)

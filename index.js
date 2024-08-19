@@ -6,6 +6,7 @@ const app = express();
 //rest of packages importations
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
+const fileUpload = require("express-fileupload");
 const cors = require("cors");
 //database
 const connectDB = require("./db/connectDB");
@@ -23,6 +24,8 @@ const errorHandlerMiddleware = require("./middleware/error-handler");
 app.use(morgan("tiny")); //to see the hit route in the console
 app.use(express.json()); // to get json form of res
 app.use(cookieParser(process.env.JWT_SECRET));
+app.use(fileUpload()); //to upload image
+app.use(express.static("./public"));
 // app.use(cors());
 app.use(
   cors({
@@ -53,3 +56,4 @@ const start = async () => {
 };
 start();
 // e163fc84
+// 7047064866;
