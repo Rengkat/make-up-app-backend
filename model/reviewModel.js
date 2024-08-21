@@ -22,9 +22,8 @@ const ReviewSchema = new mongoose.Schema(
       ref: "Product",
       required: true,
     },
-    timeS,
   },
   { timestamps: true }
 );
 ReviewSchema.index({ user: 1, product: 1 }, { unique: true });
-module.exports = mongoose.model("Review", ProductSchema);
+module.exports = mongoose.model("Review", ReviewSchema);

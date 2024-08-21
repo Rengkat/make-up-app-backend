@@ -1,4 +1,5 @@
 const Product = require("../model/productModel");
+const Review = require("../model/reviewModel");
 const CustomError = require("../errors");
 const path = require("node:path");
 const { StatusCodes } = require("http-status-codes");
@@ -7,14 +8,16 @@ const createProduct = async (req, res) => {
   res.status(StatusCodes.CREATED).json({ message: "Product successfully added" });
 };
 const getAllProducts = async (req, res, next) => {
-  const products = await Product.find({}).populate("category", "name -_id");
+  const products = await Product.find({})
+    .populate("category", "name -_id")
+    .populate("reviews", "rating -_id -product");
   res.status(StatusCodes.OK).json({ products, success: true });
 };
 
 const getSingleProduct = async (req, res, next) => {
   const productId = req.params.id;
   try {
-    const product = await Product.findById(productId);
+    const product = await Product.findById(productId).populate("reviews");
     if (!product) {
       throw new CustomError.BadRequestError(`No product with id ${productId}`);
     }
@@ -45,12 +48,18 @@ const updateProduct = async (req, res, next) => {
 };
 
 const deleteProduct = async (req, res, next) => {
-  const { id: productId } = req.params;
-  const product = await Product.findByIdAndDelete(productId);
-  if (!product) {
-    throw new CustomError.NotFoundError(`No product with id : ${productId}`);
+  try {
+    const { id: productId } = req.params;
+    const product = await Product.findById(productId);
+    if (!product) {
+      throw new CustomError.NotFoundError(`No product with id : ${productId}`);
+    }
+    await Review.deleteMany({ product: productId }); //remove all reviews of the product before deleting the product
+    await Product.deleteOne({ _id: productId });
+    res.status(StatusCodes.OK).json({ success: true, message: "Success! Product removed." });
+  } catch (error) {
+    next(error);
   }
-  res.status(StatusCodes.OK).json({ success: true, message: "Success! Product removed." });
 };
 const uploadImage = async (req, res, next) => {
   try {
@@ -68,13 +77,11 @@ const uploadImage = async (req, res, next) => {
     }
     const imagePath = path.join(__dirname, "../public/images", `${productImage.name}`);
     await productImage.mv(imagePath);
-    res
-      .status(StatusCodes.CREATED)
-      .json({
-        imageSrc: `/images/${productImage.name}`,
-        success: true,
-        message: "Image successfully uploaded",
-      });
+    res.status(StatusCodes.CREATED).json({
+      imageSrc: `/images/${productImage.name}`,
+      success: true,
+      message: "Image successfully uploaded",
+    });
   } catch (error) {
     next(error);
   }

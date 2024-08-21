@@ -41,7 +41,7 @@ app.use("/api/users", userRoute);
 app.use("/api/appointments", appointmentRoute);
 app.use("/api/categories", categoryRoute);
 app.use("/api/products", productRoute);
-app.use("/api/product/reviews", reviewRoute);
+app.use("/api/reviews", reviewRoute);
 //errors initialization
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
@@ -59,3 +59,4 @@ const start = async () => {
 start();
 // e163fc84
 // 7047064866;
+//08079353851
