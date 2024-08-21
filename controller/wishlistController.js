@@ -21,9 +21,29 @@ const addToWishlist = async (req, res, next) => {
   }
 };
 const removeFromWishlist = async (req, res, next) => {
-    try
+  try {
+    const { wishlistProductId } = req.params;
+    const wishlistProduct = await Wishlist.findById(wishlistProductId);
+    if (!wishlistProduct) {
+      throw new CustomError.NotFoundError(`Not found product with id: ${wishlistProductId}`);
+    }
+    res.status(StatusCodes.OK).json({ message: "Product successfully removed", success: true });
+  } catch (error) {
+    next(error);
+  }
 };
-const getSingleWishlistProduct = async (req, res, next) => {};
+const getSingleWishlistProduct = async (req, res, next) => {
+  try {
+    const productId = req.params.id;
+    const product = await Product.findById(productId).populate("reviews");
+    if (!product) {
+      throw new CustomError.BadRequestError(`No product with id ${productId}`);
+    }
+    res.status(StatusCodes.OK).json({ success: true, product });
+  } catch (error) {
+    next(error);
+  }
+};
 module.exports = {
   addToWishlist,
   removeFromWishlist,

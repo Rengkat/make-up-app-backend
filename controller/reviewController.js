@@ -75,8 +75,10 @@ const deleteReview = async (req, res, next) => {
     const { id: reviewId } = req.params;
 
     // Check if the review exists
-    const review = await Review.findById(reviewId);
-
+    const reviewExist = await Review.findById(reviewId);
+    if (!reviewExist) {
+      throw new CustomError.NotFoundError(`No review with id: ${reviewId}`);
+    }
     // Delete the review
     await Review.findByIdAndDelete(reviewId);
 
