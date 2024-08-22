@@ -1,6 +1,14 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
+const AddressSchema = new mongoose.Schema({
+  country: { type: String, required: true },
+  state: { type: String, required: true },
+  city: { type: String, required: true },
+  town: { type: String },
+  landmark: { type: String },
+  homeAddress: { type: String, required: true },
+});
 const UserSchema = new mongoose.Schema({
   firstName: {
     type: String,
@@ -38,6 +46,10 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: "user",
     enum: ["admin", "user"],
+  },
+  addresses: {
+    type: [AddressSchema],
+    default: [],
   },
 });
 UserSchema.pre("save", async function () {

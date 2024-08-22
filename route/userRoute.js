@@ -7,12 +7,14 @@ const {
   deleteUser,
   updateUserPassword,
   updateCurrentUser,
+  addAddressToUser,
 } = require("../controller/userController");
 const { authenticateUser, authorizationPermission } = require("../middleware/authentication");
 
 const router = express.Router();
 router.get("/", authenticateUser, authorizationPermission, getAllUsers);
 router.get("/profile", authenticateUser, getCurrentUserProfile);
+router.put("/address", authenticateUser, addAddressToUser);
 router.patch("/updatePassword", authenticateUser, updateUserPassword);
 router.patch("/updateCurrentUser", authenticateUser, updateCurrentUser);
 router

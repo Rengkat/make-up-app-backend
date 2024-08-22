@@ -119,6 +119,26 @@ const updateUserPassword = async (req, res, next) => {
     next(error);
   }
 };
+const addAddressToUser = async (req, res, next) => {
+  const userId = req.user.id;
+  const newAddress = req.body.address;
+
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return new CustomError.NotFoundError("Not found user");
+    }
+
+    user.addresses.push(newAddress);
+
+    await user.save();
+
+    res.status(StatusCodes.CREATED).json({ message: "Address added successfully", success: true });
+  } catch (error) {
+    next(error);
+  }
+};
 module.exports = {
   getAllUsers,
   getCurrentUserProfile,
@@ -127,4 +147,5 @@ module.exports = {
   deleteUser,
   updateUserPassword,
   updateCurrentUser,
+  addAddressToUser,
 };
