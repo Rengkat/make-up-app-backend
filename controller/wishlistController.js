@@ -5,33 +5,60 @@ const { StatusCodes } = require("http-status-codes");
 const addToWishlist = async (req, res, next) => {
   try {
     const { productId } = req.body;
-    //check if product is valid
+
+    // Check if product is valid
     const isValidProduct = await Product.findById(productId);
     if (!isValidProduct) {
-      throw new CustomError.NotFoundError("Not found product with id " + productId);
+      throw new CustomError.NotFoundError("No product found with id " + productId);
     }
+
+    // Check if the product is already in the wishlist
     const wishlistProductExist = await Wishlist.findOne({ product: productId, user: req.user.id });
     if (wishlistProductExist) {
-      throw new CustomError.BadRequestError("Product already exist in the wishlist");
+      throw new CustomError.BadRequestError("Product already exists in the wishlist");
     }
-    req.body.user = req.user.id;
-    res.status(StatusCodes.CREATED).json({ message: "Product successfully added", success: true });
+
+    // Add product to the wishlist
+    await Wishlist.create({ product: productId, user: req.user.id });
+
+    res.status(StatusCodes.CREATED).json({
+      message: "Product successfully added to wishlist",
+      success: true,
+    });
   } catch (error) {
     next(error);
   }
 };
+
+const getUserWishlistProducts = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+
+    const wishlist = await Wishlist.find({ user: userId }).populate("product");
+
+    res.status(StatusCodes.OK).json({ success: true, wishlist });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const removeFromWishlist = async (req, res, next) => {
   try {
-    const { wishlistProductId } = req.params;
-    const wishlistProduct = await Wishlist.findById(wishlistProductId);
+    const { id } = req.params;
+
+    const wishlistProduct = await Wishlist.findById(id);
     if (!wishlistProduct) {
-      throw new CustomError.NotFoundError(`Not found product with id: ${wishlistProductId}`);
+      throw new CustomError.NotFoundError(`Product not found in wishlist with id: ${id}`);
     }
-    res.status(StatusCodes.OK).json({ message: "Product successfully removed", success: true });
+    await Wishlist.findByIdAndDelete(id);
+    res
+      .status(StatusCodes.OK)
+      .json({ message: "Product successfully removed from wishlist", success: true });
   } catch (error) {
     next(error);
   }
 };
+
 const getSingleWishlistProduct = async (req, res, next) => {
   try {
     const productId = req.params.id;
@@ -48,4 +75,5 @@ module.exports = {
   addToWishlist,
   removeFromWishlist,
   getSingleWishlistProduct,
+  getUserWishlistProducts,
 };
