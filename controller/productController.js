@@ -8,10 +8,65 @@ const createProduct = async (req, res) => {
   res.status(StatusCodes.CREATED).json({ message: "Product successfully added" });
 };
 const getAllProducts = async (req, res, next) => {
-  const products = await Product.find({})
-    .populate("category", "name -_id")
-    .populate("reviews", "rating -_id -product");
-  res.status(StatusCodes.OK).json({ products, success: true });
+  try {
+    const { name, category, minPrice, maxPrice, sort, featured } = req.query;
+    let query = {};
+
+    if (featured) {
+      query.featured = featured === "true";
+    }
+
+    if (category) {
+      query.category = category;
+    }
+
+    if (name) {
+      query.name = { $regex: name, $options: "i" };
+    }
+
+    if (minPrice && maxPrice) {
+      query.price = { $gte: parseInt(minPrice, 10), $lte: parseInt(maxPrice, 10) };
+    }
+
+    let result = Product.find(query)
+      .populate("category", "name -_id")
+      .populate("reviews", "rating -_id -product");
+
+    let sortQuery = {};
+    switch (sort) {
+      case "popularity":
+        sortQuery.popularity = -1;
+        break;
+      case "highToLow":
+        sortQuery.price = -1;
+        break;
+      case "lowToHigh":
+        sortQuery.price = 1;
+        break;
+      case "rating":
+        sortQuery.rating = -1;
+        break;
+      case "latest":
+        sortQuery.createdAt = -1;
+        break;
+      default:
+        break;
+    }
+
+    result = result.sort(sortQuery);
+
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    result = result.limit(limit).skip(skip);
+
+    const products = await result;
+
+    res.status(StatusCodes.OK).json({ products, success: true, page });
+  } catch (error) {
+    next(error);
+  }
 };
 
 const getSingleProduct = async (req, res, next) => {

@@ -51,7 +51,7 @@ const loginUser = async (req, res, next) => {
       message: "Successfully logged in",
     });
   } catch (error) {
-    next(error); // Pass the error to the next middleware
+    next(error);
   }
 };
 const logoutUser = (req, res, next) => {

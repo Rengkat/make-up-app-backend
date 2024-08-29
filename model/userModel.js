@@ -9,48 +9,54 @@ const AddressSchema = new mongoose.Schema({
   landmark: { type: String },
   homeAddress: { type: String, required: true },
 });
-const UserSchema = new mongoose.Schema({
-  firstName: {
-    type: String,
-    required: [true, "First name can't be empty"],
-  },
-  surname: {
-    type: String,
-    required: [true, "Surname can't be empty"],
-  },
-  email: {
-    type: String,
-    required: [true, "Email can't be empty"],
-    validate: {
-      validator: validator.isEmail,
-      message: "Please provide a valid email",
+const UserSchema = new mongoose.Schema(
+  {
+    firstName: {
+      type: String,
+      required: [true, "First name can't be empty"],
     },
-  },
-  password: {
-    type: String,
-    required: [true, "Password can't be empty"],
-    validate: {
-      validator: function (value) {
-        return validator.isStrongPassword(value, {
-          minLength: 6,
-          minLowercase: 1,
-          minUppercase: 1,
-          minNumbers: 1,
-          minSymbols: 1,
-        });
+    surname: {
+      type: String,
+      required: [true, "Surname can't be empty"],
+    },
+    email: {
+      type: String,
+      required: [true, "Email can't be empty"],
+      validate: {
+        validator: validator.isEmail,
+        message: "Please provide a valid email",
       },
-      message: "Enter a stronger password",
+    },
+    password: {
+      type: String,
+      required: [true, "Password can't be empty"],
+      validate: {
+        validator: function (value) {
+          return validator.isStrongPassword(value, {
+            minLength: 6,
+            minLowercase: 1,
+            minUppercase: 1,
+            minNumbers: 1,
+            minSymbols: 1,
+          });
+        },
+        message: "Enter a stronger password",
+      },
+    },
+    role: {
+      type: String,
+      default: "user",
+      enum: ["admin", "user"],
+    },
+    addresses: {
+      type: [AddressSchema],
+      default: [],
     },
   },
-  role: {
-    type: String,
-    default: "user",
-    enum: ["admin", "user"],
-  },
-  addresses: {
-    type: [AddressSchema],
-    default: [],
-  },
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
+);
+UserSchema.virtual("fullName").get(function () {
+  return `${this.firstName} ${this.surname}`;
 });
 UserSchema.pre("save", async function () {
   if (!this.isModified("password")) {
