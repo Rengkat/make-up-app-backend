@@ -16,7 +16,7 @@ const registerUser = async (req, res, next) => {
       throw new CustomError.BadRequestError("Email already exists");
     }
     const verificationToken = crypto.randomBytes(40).toString("hex");
-    const tenMinutes = 1000 * 60 * 5;
+    const tenMinutes = 1000 * 60;
     const verificationTokenExpirationDate = new Date(Date.now() + tenMinutes);
     await User.create({
       email,
@@ -38,17 +38,80 @@ const registerUser = async (req, res, next) => {
 const verifyEmail = async (req, res, next) => {
   try {
     const { email, verificationToken } = req.body;
-    if (!verificationToken || !email) {
+
+    // Validate input
+    if (!email || !verificationToken) {
       throw new CustomError.BadRequestError("Please provide all details");
     }
+
+    // Find the user by email
     const user = await User.findOne({ email });
     if (!user) {
       throw new CustomError.NotFoundError("User not found");
     }
+
+    // Check if the token has expired
+    const currentDate = new Date();
+    if (currentDate > user.verificationTokenExpirationDate) {
+      return res.status(StatusCodes.UNAUTHORIZED).json({
+        success: false,
+        message: "Verification fail. Please request a new token.",
+      });
+    }
+
+    // Check if the verification token matches
+    if (user.verificationToken !== verificationToken) {
+      throw new CustomError.UnauthenticatedError("Verification failed");
+    }
+
+    user.isVerified = true;
+    user.verificationToken = null;
+    user.verificationTokenExpirationDate = null;
+
+    await user.save();
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Email successfully verified",
+    });
   } catch (error) {
     next(error);
   }
 };
+
+const requestNewVerificationToken = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      throw new CustomError.BadRequestError("Please provide an email");
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw new CustomError.NotFoundError("User not found");
+    }
+
+    // Generate a new token
+    const newVerificationToken = crypto.randomBytes(40).toString("hex");
+    const tenMinutes = 1000 * 60 * 5;
+    user.verificationToken = newVerificationToken;
+    user.verificationTokenExpirationDate = new Date(Date.now() + tenMinutes);
+
+    await user.save();
+
+    // Send the new verification email
+    // await sendVerificationEmail(user.email, newVerificationToken);
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "A new verification token has been sent to your email.",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -94,4 +157,4 @@ const logoutUser = (req, res, next) => {
   }
 };
 
-module.exports = { registerUser, verifyEmail, loginUser, logoutUser };
+module.exports = { registerUser, verifyEmail, requestNewVerificationToken, loginUser, logoutUser };
