@@ -1,10 +1,14 @@
 const User = require("../model/userModel");
 const StatusCodes = require("http-status-codes");
 const CustomError = require("../errors/index");
-const { attachTokenToResponse } = require("../utils");
+const { attachTokenToResponse, sendVerificationEmail } = require("../utils");
 const createUserPayload = require("../utils/createUserPayload");
 const crypto = require("crypto");
 
+// const host = req.get("host");
+// const forwardedHost = req.get("x-forwarded-host");
+// const forwardedProtocol = req.get("x-forwarded-proto");
+// console.log(host, forwardedHost, forwardedProtocol);
 const registerUser = async (req, res, next) => {
   try {
     const { email, firstName, surname, password } = req.body;
@@ -16,9 +20,9 @@ const registerUser = async (req, res, next) => {
       throw new CustomError.BadRequestError("Email already exists");
     }
     const verificationToken = crypto.randomBytes(40).toString("hex");
-    const tenMinutes = 1000 * 60;
-    const verificationTokenExpirationDate = new Date(Date.now() + tenMinutes);
-    await User.create({
+    const oneHour = 1000 * 60 * 60;
+    const verificationTokenExpirationDate = new Date(Date.now() + oneHour);
+    const user = await User.create({
       email,
       firstName,
       surname,
@@ -27,9 +31,17 @@ const registerUser = async (req, res, next) => {
       verificationTokenExpirationDate,
     });
 
+    //send verification email
+    const origin = "http://localhost:3000";
+    await sendVerificationEmail({
+      firstName: user.firstName,
+      email: user.email,
+      origin,
+      verificationToken: user.verificationToken,
+    });
     res.status(StatusCodes.CREATED).json({
       success: true,
-      message: "Please verify your email",
+      message: "Please check your email box and verify your email",
     });
   } catch (err) {
     next(err);
@@ -39,18 +51,16 @@ const verifyEmail = async (req, res, next) => {
   try {
     const { email, verificationToken } = req.body;
 
-    // Validate input
     if (!email || !verificationToken) {
       throw new CustomError.BadRequestError("Please provide all details");
     }
 
-    // Find the user by email
     const user = await User.findOne({ email });
     if (!user) {
       throw new CustomError.NotFoundError("User not found");
     }
 
-    // Check if the token has expired
+    // Check if the token has expired/ Javascript Stops
     const currentDate = new Date();
     if (currentDate > user.verificationTokenExpirationDate) {
       return res.status(StatusCodes.UNAUTHORIZED).json({
@@ -94,9 +104,9 @@ const requestNewVerificationToken = async (req, res, next) => {
 
     // Generate a new token
     const newVerificationToken = crypto.randomBytes(40).toString("hex");
-    const tenMinutes = 1000 * 60 * 5;
+    const oneHour = 1000 * 60 * 60;
     user.verificationToken = newVerificationToken;
-    user.verificationTokenExpirationDate = new Date(Date.now() + tenMinutes);
+    user.verificationTokenExpirationDate = new Date(Date.now() + oneHour);
 
     await user.save();
 
