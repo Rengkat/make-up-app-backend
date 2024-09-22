@@ -72,7 +72,7 @@ const updateCurrentUser = async (req, res, next) => {
     // Correctly update the user's properties with the new values
     user.firstName = firstName !== undefined ? firstName : user.firstName;
     user.surname = surname !== undefined ? surname : user.surname;
-    user.email = email !== undefined ? email : user.email;
+    user.email = email !== undefined ? email : user.email; //this will be done in the way the user will reciev mail
 
     await user.save();
 
@@ -177,7 +177,7 @@ const deleteAddress = async (req, res, next) => {
     const addressIndex = user.addresses.findIndex(
       (address) => address._id.toString() === addressId
     );
-    console.log(addressIndex);
+    // console.log(addressIndex);
     if (addressIndex === -1) {
       throw new CustomError.NotFoundError("Address not found");
     }
