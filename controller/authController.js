@@ -176,25 +176,30 @@ const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
     if (!email) {
+      throw new CustomError.BadRequestError("Please provide email");
     }
+    const user = await User.findOne({ email });
+    if (user) {
+      const passwordToken = crypto.randomBytes(70).toString("hex");
+      const oneHour = 1000 * 60 * 60;
+      const verificationTokenExpirationDate = new Date(Date.now() + oneHour);
+      user.verificationToken = passwordToken;
+      user.verificationTokenExpirationDate = verificationTokenExpirationDate;
+      await user.save();
+    }
+    await sendResetPasswordEmail({
+      firstName: user.firstName,
+      email: user.email,
+      resetPasswordToken: user.verificationToken,
+      origin: process.env.ORIGIN,
+    });
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Please check your email to reset your password",
+    });
   } catch (error) {
-    throw new CustomError.BadRequestError("Please provide email");
+    next(error);
   }
-  const user = await User.findOne({ email });
-  if (user) {
-    const verificationToken = crypto.randomBytes(70).toString("hex");
-    const oneHour = 1000 * 60 * 60;
-    const verificationTokenExpirationDate = new Date(Date.now() + oneHour);
-    user.verificationToken = verificationToken;
-    user.verificationTokenExpirationDate = verificationTokenExpirationDate;
-    await user.save();
-  }
-  await sendResetPasswordEmail({
-    firstName: user.firstName,
-    email: user.email,
-    resetPasswordToken: verificationToken,
-    origin: process.env.ORIGIN,
-  });
 };
 const resetPassword = async (req, res, next) => {
   try {
