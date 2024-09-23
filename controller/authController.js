@@ -5,7 +5,7 @@ const { attachTokenToResponse, sendVerificationEmail, sendEmail } = require("../
 const createUserPayload = require("../utils/createUserPayload");
 const crypto = require("crypto");
 const sendResetPasswordEmail = require("../utils/email/sendResetPasswordEmail");
-
+const createHarsh = require("../utils/email/createHash");
 // const host = req.get("host");
 // const forwardedHost = req.get("x-forwarded-host");
 // const forwardedProtocol = req.get("x-forwarded-proto");
@@ -183,16 +183,18 @@ const forgotPassword = async (req, res, next) => {
       const passwordToken = crypto.randomBytes(70).toString("hex");
       const oneHour = 1000 * 60 * 60;
       const verificationTokenExpirationDate = new Date(Date.now() + oneHour);
-      user.verificationToken = passwordToken;
+
+      await sendResetPasswordEmail({
+        firstName: user.firstName,
+        email: user.email,
+        resetPasswordToken: user.verificationToken,
+        origin: process.env.ORIGIN,
+      });
+
+      user.verificationToken = createHarsh(passwordToken);
       user.verificationTokenExpirationDate = verificationTokenExpirationDate;
       await user.save();
     }
-    await sendResetPasswordEmail({
-      firstName: user.firstName,
-      email: user.email,
-      resetPasswordToken: user.verificationToken,
-      origin: process.env.ORIGIN,
-    });
     res.status(StatusCodes.OK).json({
       success: true,
       message: "Please check your email to reset your password",
@@ -204,8 +206,40 @@ const forgotPassword = async (req, res, next) => {
 const resetPassword = async (req, res, next) => {
   try {
     const { email, resetVerificationToken, password } = req.body;
-  } catch (error) {}
+
+    if (!email || !password || !resetVerificationToken) {
+      throw new CustomError.BadRequestError("Please provide all credentials");
+    }
+
+    const user = await User.findOne({ email });
+
+    if (user) {
+      const currentDate = new Date();
+
+      if (user.verificationToken !== createHarsh(resetVerificationToken)) {
+        throw new CustomError.BadRequestError("Validation failed");
+      }
+
+      if (currentDate > user.verificationTokenExpirationDate) {
+        throw new CustomError.BadRequestError("Verification code expired. Please reverify");
+      }
+
+      user.password = password;
+      user.verificationToken = null;
+      user.verificationTokenExpirationDate = null;
+
+      await user.save();
+    }
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Your password has been successfully reset",
+    });
+  } catch (error) {
+    next(error);
+  }
 };
+
 const logoutUser = (req, res, next) => {
   try {
     res.cookie("token", "", {
