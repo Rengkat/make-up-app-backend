@@ -1,9 +1,10 @@
 const User = require("../model/userModel");
 const StatusCodes = require("http-status-codes");
 const CustomError = require("../errors/index");
-const { attachTokenToResponse, sendVerificationEmail } = require("../utils");
+const { attachTokenToResponse, sendVerificationEmail, sendEmail } = require("../utils");
 const createUserPayload = require("../utils/createUserPayload");
 const crypto = require("crypto");
+const sendResetPasswordEmail = require("../utils/email/sendResetPasswordEmail");
 
 // const host = req.get("host");
 // const forwardedHost = req.get("x-forwarded-host");
@@ -32,11 +33,10 @@ const registerUser = async (req, res, next) => {
     });
 
     //send verification email
-    const origin = "http://localhost:3000";
     await sendVerificationEmail({
       firstName: user.firstName,
       email: user.email,
-      origin,
+      origin: process.env.ORIGIN,
       verificationToken: user.verificationToken,
     });
     res.status(StatusCodes.CREATED).json({
@@ -46,6 +46,18 @@ const registerUser = async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+};
+const testSendingMail = async (req, res, next) => {
+  const to = "alex@gmail.com";
+
+  // const origin = "http://localhost:3000";
+  await sendVerificationEmail({
+    firstName: "Alexander",
+    email: to,
+    origin: process.env.ORIGIN,
+    verificationToken: "1234567sdfgwertwerty",
+  });
+  // res.send("Email sent");
 };
 const verifyEmail = async (req, res, next) => {
   try {
@@ -111,7 +123,12 @@ const requestNewVerificationToken = async (req, res, next) => {
     await user.save();
 
     // Send the new verification email
-    // await sendVerificationEmail(user.email, newVerificationToken);
+    await sendVerificationEmail({
+      firstName: user.firstName,
+      origin: process.env.ORIGIN,
+      email: user.email,
+      verificationToken: user.verificationToken,
+    });
 
     res.status(StatusCodes.OK).json({
       success: true,
@@ -155,6 +172,35 @@ const loginUser = async (req, res, next) => {
     next(error);
   }
 };
+const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+    }
+  } catch (error) {
+    throw new CustomError.BadRequestError("Please provide email");
+  }
+  const user = await User.findOne({ email });
+  if (user) {
+    const verificationToken = crypto.randomBytes(70).toString("hex");
+    const oneHour = 1000 * 60 * 60;
+    const verificationTokenExpirationDate = new Date(Date.now() + oneHour);
+    user.verificationToken = verificationToken;
+    user.verificationTokenExpirationDate = verificationTokenExpirationDate;
+    await user.save();
+  }
+  await sendResetPasswordEmail({
+    firstName: user.firstName,
+    email: user.email,
+    resetPasswordToken: verificationToken,
+    origin: process.env.ORIGIN,
+  });
+};
+const resetPassword = async (req, res, next) => {
+  try {
+    const { email, resetVerificationToken, password } = req.body;
+  } catch (error) {}
+};
 const logoutUser = (req, res, next) => {
   try {
     res.cookie("token", "", {
@@ -167,4 +213,12 @@ const logoutUser = (req, res, next) => {
   }
 };
 
-module.exports = { registerUser, verifyEmail, requestNewVerificationToken, loginUser, logoutUser };
+module.exports = {
+  registerUser,
+  testSendingMail,
+  verifyEmail,
+  requestNewVerificationToken,
+  loginUser,
+  logoutUser,
+  forgotPassword,
+};

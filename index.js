@@ -8,6 +8,8 @@ const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 const fileUpload = require("express-fileupload");
 const cors = require("cors");
+const xss = require("xss-clean");
+
 //database
 const connectDB = require("./db/connectDB");
 
@@ -29,7 +31,7 @@ app.use(express.json()); // to get json form of res
 app.use(cookieParser(process.env.JWT_SECRET));
 app.use(fileUpload()); //to upload image
 app.use(express.static("./public"));
-// app.use(cors());
+app.use(xss());
 app.use(
   cors({
     origin: "http://localhost:3000", // Replace with your frontend port
