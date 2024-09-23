@@ -184,17 +184,20 @@ const forgotPassword = async (req, res, next) => {
       const oneHour = 1000 * 60 * 60;
       const verificationTokenExpirationDate = new Date(Date.now() + oneHour);
 
-      await sendResetPasswordEmail({
-        firstName: user.firstName,
-        email: user.email,
-        resetPasswordToken: user.verificationToken,
-        origin: process.env.ORIGIN,
-      });
-
+      // Save the hashed token and expiration date to the user
       user.verificationToken = createHarsh(passwordToken);
       user.verificationTokenExpirationDate = verificationTokenExpirationDate;
       await user.save();
+
+      // Send the reset password email with the un-hashed token
+      await sendResetPasswordEmail({
+        firstName: user.firstName,
+        email: user.email,
+        resetPasswordToken: passwordToken,
+        origin: process.env.ORIGIN,
+      });
     }
+
     res.status(StatusCodes.OK).json({
       success: true,
       message: "Please check your email to reset your password",
@@ -203,6 +206,7 @@ const forgotPassword = async (req, res, next) => {
     next(error);
   }
 };
+
 const resetPassword = async (req, res, next) => {
   try {
     const { email, resetVerificationToken, password } = req.body;
@@ -260,4 +264,5 @@ module.exports = {
   loginUser,
   logoutUser,
   forgotPassword,
+  resetPassword,
 };

@@ -1,16 +1,17 @@
 const nodemailer = require("nodemailer");
 const nodemailerConfig = require("./nodemailerConfig");
 
-const sendEmail = async ({ to, subject, html, origin }) => {
-  let testAccount = await nodemailer.createTestAccount();
+const sendEmail = async ({ to, subject, html }) => {
   const transporter = nodemailer.createTransport(nodemailerConfig);
 
   const info = await transporter.sendMail({
-    from: '"Alex" <maddison53@ethereal.email>', // sender address
-    to, // list of receivers
-    subject, // Subject line
-    html, // html body
+    from: `"Fullybeauty" <${process.env.GMAIL_ADDRESS}>`,
+    to,
+    subject,
+    html,
   });
+
+  console.log("Message sent: %s", info.messageId);
 };
 
 module.exports = sendEmail;
