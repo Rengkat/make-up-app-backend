@@ -189,7 +189,7 @@ const loginUser = async (req, res, next) => {
 
     res.status(StatusCodes.OK).json({
       success: true,
-      user: userPayload,
+      user: accessTokenPayload,
       message: "Successfully logged in",
     });
   } catch (error) {

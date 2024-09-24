@@ -11,10 +11,10 @@ const attachTokenToResponse = ({ res, accessTokenPayload, refreshToken }) => {
   const refreshTokenJWT = createJwt({ payload: { accessTokenPayload, refreshToken } });
 
   const longTime = 1000 * 60 * 60 * 24 * 30;
-
+  const shortTime = 1000 * 60 * 5;
   res.cookie("accessToken", accessTokenJWT, {
     httpOnly: true,
-    maxAge: 1000 * 60 * 5,
+    maxAge: shortTime,
     signed: true,
     secure: process.env.NODE_ENV === "production",
   });
