@@ -68,4 +68,3 @@ start();
 // 7047064866;
 //08079353851
 // sunday@ocsf.org.ng
-//sendGrid: RBPNMVFVLCG99ZZJFG5YNG88

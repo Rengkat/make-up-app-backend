@@ -6,6 +6,7 @@ const createUserPayload = require("../utils/createUserPayload");
 const crypto = require("crypto");
 const sendResetPasswordEmail = require("../utils/email/sendResetPasswordEmail");
 const createHarsh = require("../utils/email/createHash");
+const Token = require("../model/Token");
 // const host = req.get("host");
 // const forwardedHost = req.get("x-forwarded-host");
 // const forwardedProtocol = req.get("x-forwarded-proto");
@@ -50,7 +51,6 @@ const registerUser = async (req, res, next) => {
 const testSendingMail = async (req, res, next) => {
   const to = "alex@gmail.com";
 
-  // const origin = "http://localhost:3000";
   await sendVerificationEmail({
     firstName: "Alexander",
     email: to,
@@ -160,8 +160,32 @@ const loginUser = async (req, res, next) => {
     if (!user.isVerified) {
       throw new CustomError.UnauthenticatedError("Please verify your email");
     }
-    const userPayload = createUserPayload(user);
-    attachTokenToResponse({ res, userPayload });
+    const accessTokenPayload = createUserPayload(user);
+
+    //initialize refresh token
+    let refreshToken = "";
+    //check existing token first (refresh token). it may be around
+    const existingToken = await Token.findOne({ user: user._id });
+    if (existingToken) {
+      const { isValid } = existingToken;
+      if (!isValid) {
+        throw new CustomError.UnauthenticatedError("Invalid credentials");
+      }
+      //then reset the accessToken and refreshToken
+      refreshToken = existingToken;
+      attachTokenToResponse({ res, accessTokenPayload, refreshToken });
+      return res.status(StatusCodes.OK).json({
+        success: true,
+        message: "Successfully logged in",
+      });
+    }
+    refreshToken = crypto.randomBytes(40).toString("hex");
+    const ip = req.ip;
+    const userAgent = req.headers["user-agent"];
+    // the userToken should have all what is in the model and attach it to the response
+    const refreshTokenPayload = { refreshToken, ip, userAgent, user: user._id };
+    await Token.create(refreshTokenPayload);
+    attachTokenToResponse({ res, accessTokenPayload, refreshToken });
 
     res.status(StatusCodes.OK).json({
       success: true,
