@@ -1,6 +1,7 @@
 require("dotenv").config(); //to get resources from .env file
 // express
 const express = require("express");
+const path = require("path");
 const app = express();
 
 //rest of packages importations
@@ -38,7 +39,11 @@ app.use(
     credentials: true, // Allows cookies to be sent with requests
   })
 );
-
+// Route for the home page
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "doc.html"));
+});
+// docgen build -i App.postman_collection.json -o doc.html
 //route initialization
 app.use("/api/auth", authRoute);
 app.use("/api/users", userRoute);
@@ -52,6 +57,8 @@ app.use("/api/cart", cartRoute);
 //errors initialization
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
+
+// app.use('/',async(req,res)=>);
 //starting the app
 const port = process.env.PORT || 5000;
 const start = async () => {
