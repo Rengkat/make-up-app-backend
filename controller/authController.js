@@ -1,12 +1,12 @@
 const User = require("../model/userModel");
+const Token = require("../model/Token");
 const StatusCodes = require("http-status-codes");
 const CustomError = require("../errors/index");
-const { attachTokenToResponse, sendVerificationEmail, sendEmail } = require("../utils");
+const { attachTokenToResponse, sendVerificationEmail } = require("../utils");
 const createUserPayload = require("../utils/createUserPayload");
 const crypto = require("crypto");
 const sendResetPasswordEmail = require("../utils/email/sendResetPasswordEmail");
 const createHarsh = require("../utils/email/createHash");
-const Token = require("../model/Token");
 // const host = req.get("host");
 // const forwardedHost = req.get("x-forwarded-host");
 // const forwardedProtocol = req.get("x-forwarded-proto");
@@ -172,7 +172,7 @@ const loginUser = async (req, res, next) => {
         throw new CustomError.UnauthenticatedError("Invalid credentials");
       }
       //then reset the accessToken and refreshToken
-      refreshToken = existingToken;
+      refreshToken = existingToken.refreshToken;
       attachTokenToResponse({ res, accessTokenPayload, refreshToken });
       return res.status(StatusCodes.OK).json({
         success: true,

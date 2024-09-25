@@ -1,20 +1,26 @@
 const CustomError = require("../errors/index");
 const { isTokenVerified } = require("../utils");
-const attachTokenToResponse = require("../utils");
-const authenticateUser = (req, res, next) => {
+const { attachTokenToResponse } = require("../utils");
+const Token = require("../model/Token");
+const authenticateUser = async (req, res, next) => {
   const { accessToken, refreshToken } = req.signedCookies;
   try {
     if (accessToken) {
       const payload = isTokenVerified(accessToken);
-      req.user = payload;
+
+      req.user = payload.accessTokenPayload;
       return next(); // if there is accessToken set user as payload, the program should just move to the next middleware,
       //no need to continue checking the next code block because i.e user is logged in
       // but since the accessToken life time is short, it might be expired.
       //in this case we will check the refreshToken and also check if it is valid
     }
+    // if the refreshToken is not there
+    if (!refreshToken) {
+      throw new CustomError.UnauthenticatedError("Authentication invalid");
+    }
     const payload = isTokenVerified(refreshToken);
-    const existingToken = Token.findOne({
-      user: payload.accessToken.id,
+    const existingToken = await Token.findOne({
+      user: payload.accessTokenPayload.id,
       refreshToken: payload.refreshToken,
     });
     if (!existingToken || !existingToken?.isValid) {
@@ -25,9 +31,9 @@ const authenticateUser = (req, res, next) => {
     attachTokenToResponse({
       res,
       accessTokenPayload: payload.accessTokenPayload,
-      refreshTokenPayload: existingToken?.refreshToken,
+      refreshToken: existingToken?.refreshToken,
     });
-    req.user = payload.accessToken;
+    req.user = payload.accessTokenPayload;
     next();
   } catch (error) {
     next(error);

@@ -13,10 +13,11 @@ router
   .route("/")
   .post(authenticateUser, bookAppointment)
   .get(authenticateUser, authorizationPermission, getAllAppointments);
+router.get("/user-appointments", authenticateUser, getUserAppointments);
+
 router
   .route("/:id")
-  .get(getSingleAppointment)
-  .get(getUserAppointments)
-  .patch(updateAppointment)
-  .delete(deleteAppointment);
+  .get(authenticateUser, authorizationPermission, getSingleAppointment)
+  .patch(authenticateUser, updateAppointment)
+  .delete(authenticateUser, authorizationPermission, deleteAppointment);
 module.exports = router;

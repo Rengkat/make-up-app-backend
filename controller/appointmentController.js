@@ -34,7 +34,7 @@ const getAllAppointments = async (req, res, next) => {
 };
 const getUserAppointments = async (req, res, next) => {
   try {
-    const appointments = await Appointment.findOne({ user: req.user.id });
+    const appointments = await Appointment.find({ user: req.user.id });
     res.status(StatusCodes.OK).json({ appointments, success: true });
   } catch (error) {
     next(error);
