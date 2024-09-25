@@ -48,17 +48,7 @@ const registerUser = async (req, res, next) => {
     next(err);
   }
 };
-const testSendingMail = async (req, res, next) => {
-  const to = "alex@gmail.com";
 
-  await sendVerificationEmail({
-    firstName: "Alexander",
-    email: to,
-    origin: process.env.ORIGIN,
-    verificationToken: "1234567sdfgwertwerty",
-  });
-  // res.send("Email sent");
-};
 const verifyEmail = async (req, res, next) => {
   try {
     const { email, verificationToken } = req.body;
@@ -268,9 +258,14 @@ const resetPassword = async (req, res, next) => {
   }
 };
 
-const logoutUser = (req, res, next) => {
+const logoutUser = async (req, res, next) => {
   try {
-    res.cookie("token", "", {
+    await Token.findOneAndDelete({ user: req.user.id });
+    res.cookie("accessToken", "", {
+      httpOnly: true,
+      expires: new Date(0),
+    });
+    res.cookie("refreshToken", "", {
       httpOnly: true,
       expires: new Date(0),
     });
@@ -282,7 +277,7 @@ const logoutUser = (req, res, next) => {
 
 module.exports = {
   registerUser,
-  testSendingMail,
+
   verifyEmail,
   requestNewVerificationToken,
   loginUser,
