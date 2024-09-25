@@ -71,7 +71,5 @@ const start = async () => {
   }
 };
 start();
-// e163fc84
-// 7047064866;
-//08079353851
-// sunday@ocsf.org.ng
+
+// https://make-up-app-backend.onrender.com
