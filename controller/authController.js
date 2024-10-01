@@ -167,6 +167,7 @@ const loginUser = async (req, res, next) => {
       return res.status(StatusCodes.OK).json({
         success: true,
         message: "Successfully logged in",
+        user: accessTokenPayload,
       });
     }
     refreshToken = crypto.randomBytes(40).toString("hex");
@@ -277,7 +278,6 @@ const logoutUser = async (req, res, next) => {
 
 module.exports = {
   registerUser,
-
   verifyEmail,
   requestNewVerificationToken,
   loginUser,
