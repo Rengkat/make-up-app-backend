@@ -12,11 +12,13 @@ const attachTokenToResponse = ({ res, accessTokenPayload, refreshToken }) => {
 
   const longTime = 1000 * 60 * 60 * 24 * 30;
   const shortTime = 1000 * 60 * 5;
+
   res.cookie("accessToken", accessTokenJWT, {
     httpOnly: true,
     maxAge: shortTime,
     signed: true,
     secure: process.env.NODE_ENV === "production",
+    sameSite: "None",
   });
 
   res.cookie("refreshToken", refreshTokenJWT, {
@@ -24,6 +26,7 @@ const attachTokenToResponse = ({ res, accessTokenPayload, refreshToken }) => {
     expires: new Date(Date.now() + longTime),
     signed: true,
     secure: process.env.NODE_ENV === "production",
+    sameSite: "None",
   });
 };
 

@@ -11,35 +11,48 @@ const createHarsh = require("../utils/email/createHash");
 // const forwardedHost = req.get("x-forwarded-host");
 // const forwardedProtocol = req.get("x-forwarded-proto");
 // console.log(host, forwardedHost, forwardedProtocol);
+const capitalize = (str) => {
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+
 const registerUser = async (req, res, next) => {
   try {
     const { email, firstName, surname, password } = req.body;
+
     if (!email || !firstName || !surname || !password) {
       throw new CustomError.BadRequestError("Please provide all credentials");
     }
+
+    // Normalize firstName and surname
+    const formattedFirstName = capitalize(firstName.trim());
+    const formattedSurname = capitalize(surname.trim());
+
     const emailExists = await User.findOne({ email });
     if (emailExists) {
       throw new CustomError.BadRequestError("Email already exists");
     }
+
     const verificationToken = crypto.randomBytes(40).toString("hex");
     const oneHour = 1000 * 60 * 60;
     const verificationTokenExpirationDate = new Date(Date.now() + oneHour);
+
     const user = await User.create({
       email,
-      firstName,
-      surname,
+      firstName: formattedFirstName,
+      surname: formattedSurname,
       password,
       verificationToken,
       verificationTokenExpirationDate,
     });
 
-    //send verification email
+    // Send verification email
     await sendVerificationEmail({
       firstName: user.firstName,
       email: user.email,
       origin: process.env.ORIGIN,
       verificationToken: user.verificationToken,
     });
+
     res.status(StatusCodes.CREATED).json({
       success: true,
       message: "Please check your email box and verify your email",
