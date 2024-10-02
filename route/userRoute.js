@@ -30,5 +30,5 @@ router
   .get(authenticateUser, authorizationPermission, getSingleUser)
   .patch(authenticateUser, authorizationPermission, updateUser)
   .delete(authenticateUser, authorizationPermission, deleteUser);
-router.patch("/addresses/:addressId", authenticateUser, getSingleAddress);
+router.get("/addresses/:addressId", authenticateUser, getSingleAddress);
 module.exports = router;
