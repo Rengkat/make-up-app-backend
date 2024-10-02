@@ -139,6 +139,25 @@ const addAddressToUser = async (req, res, next) => {
     next(error);
   }
 };
+const getSingleAddress = async (req, res, next) => {
+  const { addressId } = req.params;
+  const userId = req.user.id;
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return new CustomError.NotFoundError("User not found");
+    }
+
+    const address = user.addresses.find((address) => address._id.toString() === addressId);
+    if (!address) {
+      return new CustomError.NotFoundError("User not found");
+    }
+    res.status(StatusCodes.OK).json({ address, success: true });
+  } catch (error) {
+    next(error);
+  }
+};
 const updateAddress = async (req, res, next) => {
   const userId = req.user.id;
   const { addressId, updatedAddress } = req.body;
@@ -150,7 +169,6 @@ const updateAddress = async (req, res, next) => {
       return new CustomError.NotFoundError("User not found");
     }
 
-    // Find the address by addressId
     const addressIndex = user.addresses.findIndex(
       (address) => address._id.toString() === addressId
     );
@@ -201,4 +219,5 @@ module.exports = {
   addAddressToUser,
   updateAddress,
   deleteAddress,
+  getSingleAddress,
 };

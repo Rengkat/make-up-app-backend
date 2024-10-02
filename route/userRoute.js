@@ -10,6 +10,7 @@ const {
   addAddressToUser,
   updateAddress,
   deleteAddress,
+  getSingleAddress,
 } = require("../controller/userController");
 const { authenticateUser, authorizationPermission } = require("../middleware/authentication");
 
@@ -29,4 +30,5 @@ router
   .get(authenticateUser, authorizationPermission, getSingleUser)
   .patch(authenticateUser, authorizationPermission, updateUser)
   .delete(authenticateUser, authorizationPermission, deleteUser);
+router.patch("/address/:addressId", authenticateUser, getSingleAddress);
 module.exports = router;
