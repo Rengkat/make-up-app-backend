@@ -67,6 +67,15 @@ const AppointmentSchema = new mongoose.Schema({
     ],
     required: true,
   },
+  address: {
+    country: { type: String, required: true },
+    state: { type: String, required: true },
+    city: { type: String, required: true },
+    town: { type: String },
+    landmark: { type: String },
+    homeAddress: { type: String, required: true },
+  },
+
   type: {
     type: String,
     enum: ["spa", "home service"],
