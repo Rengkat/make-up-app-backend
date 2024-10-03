@@ -68,12 +68,12 @@ const AppointmentSchema = new mongoose.Schema({
     required: true,
   },
   address: {
-    country: { type: String, required: true },
-    state: { type: String, required: true },
-    city: { type: String, required: true },
+    country: { type: String },
+    state: { type: String },
+    city: { type: String },
     town: { type: String },
     landmark: { type: String },
-    homeAddress: { type: String, required: true },
+    homeAddress: { type: String },
   },
 
   type: {
