@@ -4,7 +4,7 @@ const CustomError = require("../errors");
 const bookAppointment = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const { date, time, service, type } = req.body;
+    const { date, time, service, type, address } = req.body;
 
     const appointment = await Appointment.create({
       user: userId,
