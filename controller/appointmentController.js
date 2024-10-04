@@ -12,6 +12,7 @@ const bookAppointment = async (req, res, next) => {
       time,
       service,
       type,
+      address,
     });
 
     res.status(StatusCodes.CREATED).json({
