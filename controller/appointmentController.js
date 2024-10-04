@@ -58,7 +58,7 @@ const getSingleAppointment = async (req, res, next) => {
 const updateAppointment = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const { date, time, service, type, status } = req.body;
+    const { date, time, service, type, status, address } = req.body;
 
     const appointment = await Appointment.findById(id);
 
@@ -71,6 +71,7 @@ const updateAppointment = async (req, res, next) => {
     appointment.service = service !== undefined ? service : appointment.service;
     appointment.type = type !== undefined ? type : appointment.type;
     appointment.status = status !== undefined ? status : appointment.status;
+    appointment.address = status !== undefined ? address : appointment.address;
 
     await appointment.save();
 
