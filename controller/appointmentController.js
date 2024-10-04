@@ -71,7 +71,7 @@ const updateAppointment = async (req, res, next) => {
     appointment.service = service !== undefined ? service : appointment.service;
     appointment.type = type !== undefined ? type : appointment.type;
     appointment.status = status !== undefined ? status : appointment.status;
-    appointment.address = status !== undefined ? address : appointment.address;
+    appointment.address = address !== undefined ? address : appointment.address;
 
     await appointment.save();
 
