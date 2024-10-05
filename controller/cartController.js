@@ -59,7 +59,7 @@ const removeFromCart = async (req, res, next) => {
     next(error);
   }
 };
-const updatePrice = async (req, res, next) => {
+const updateQuantity = async (req, res, next) => {
   try {
     const { quantity } = req.body;
     const id = req.body.id || req.params.id;
@@ -111,5 +111,5 @@ module.exports = {
   removeFromCart,
   getSingleCartProduct,
   getAllUserCartProducts,
-  updatePrice,
+  updateQuantity,
 };

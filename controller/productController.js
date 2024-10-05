@@ -13,7 +13,7 @@ const getAllProducts = async (req, res, next) => {
     const { name, category, minPrice, maxPrice, sort, featured } = req.query;
     let query = {};
 
-    if (featured !== undefined) {
+    if (featured) {
       query.featured = featured === "true";
     }
 
@@ -25,20 +25,16 @@ const getAllProducts = async (req, res, next) => {
       query.name = { $regex: name, $options: "i" };
     }
 
-    if (minPrice || maxPrice) {
-      query.price = {};
-      if (minPrice) {
-        query.price.$gte = parseInt(minPrice, 10);
-      }
-      if (maxPrice) {
-        query.price.$lte = parseInt(maxPrice, 10);
-      }
+    if (minPrice && maxPrice) {
+      query.price = { $gte: parseInt(minPrice, 10), $lte: parseInt(maxPrice, 10) };
     }
 
-    let result = Product.find(query)
+    // Fetch only specific fields: name, price, image
+    let result = Product.find(query, { name: 1, price: 1, image: 1, averageRating: 1 })
       .populate("category", "name -_id")
       .populate("reviews", "rating -_id -product");
 
+    // Sorting logic
     let sortQuery = {};
     switch (sort) {
       case "popularity":
@@ -71,13 +67,8 @@ const getAllProducts = async (req, res, next) => {
     const products = await result;
     const totalProducts = await Product.countDocuments(query);
     const totalPages = Math.ceil(totalProducts / limit);
-    res.status(StatusCodes.OK).json({
-      products,
-      success: true,
-      page,
-      totalPages,
-      totalProducts,
-    });
+
+    res.status(StatusCodes.OK).json({ products, success: true, page, totalPages, totalProducts });
   } catch (error) {
     next(error);
   }
