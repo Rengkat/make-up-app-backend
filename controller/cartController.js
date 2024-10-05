@@ -4,9 +4,9 @@ const Product = require("../model/productModel");
 const { StatusCodes } = require("http-status-codes");
 const addToCart = async (req, res, next) => {
   try {
-    const { productId, quantity } = req.body;
+    const productId = req.body.id || req.params.id;
 
-    if (!productId || !quantity) {
+    if (!productId) {
       throw new CustomError.BadRequestError("Please provide product id and quantity");
     }
 
@@ -20,7 +20,7 @@ const addToCart = async (req, res, next) => {
       throw new CustomError.BadRequestError("Product already exists in the cart");
     }
 
-    await Cart.create({ product: productId, user: req.user.id, quantity });
+    await Cart.create({ product: productId, user: req.user.id });
 
     res.status(StatusCodes.CREATED).json({
       message: "Product successfully added to cart",
