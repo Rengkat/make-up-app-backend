@@ -15,6 +15,7 @@ const CartSchema = new mongoose.Schema(
     quantity: {
       type: Number,
       required: [true, "Please provide quantity"],
+      default: 1, // Set default quantity to 1
     },
   },
   {
