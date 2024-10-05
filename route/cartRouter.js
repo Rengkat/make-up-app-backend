@@ -4,6 +4,7 @@ const {
   removeFromCart,
   getSingleCartProduct,
   getAllUserCartProducts,
+  updatePrice,
 } = require("../controller/cartController");
 const { authenticateUser } = require("../middleware/authentication");
 const router = express.Router();
@@ -11,5 +12,6 @@ router.route("/").post(authenticateUser, addToCart).get(authenticateUser, getAll
 router
   .route("/:id")
   .get(authenticateUser, getSingleCartProduct)
-  .delete(authenticateUser, removeFromCart);
+  .delete(authenticateUser, removeFromCart)
+  .patch(authenticateUser, updatePrice);
 module.exports = router;

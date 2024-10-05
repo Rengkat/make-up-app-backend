@@ -59,6 +59,40 @@ const removeFromCart = async (req, res, next) => {
     next(error);
   }
 };
+const updatePrice = async (req, res, next) => {
+  try {
+    const { quantity } = req.body;
+    const id = req.body.id || req.params.id;
+
+    if (!id || quantity === undefined || quantity === null) {
+      throw new CustomError.BadRequestError("Please provide appropriate details.");
+    }
+
+    const cartProduct = await Cart.findById(id);
+    if (!cartProduct) {
+      throw new CustomError.NotFoundError("Product not found in cart.");
+    }
+
+    if (quantity < 1) {
+      await Cart.findByIdAndDelete(id);
+      return res.status(StatusCodes.OK).json({
+        message: "Product successfully removed from cart.",
+        success: true,
+      });
+    }
+
+    cartProduct.quantity = quantity;
+    await cartProduct.save();
+
+    res.status(StatusCodes.OK).json({
+      message: "Product quantity successfully updated.",
+      success: true,
+      product: cartProduct,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 const getSingleCartProduct = async (req, res, next) => {
   try {
@@ -77,4 +111,5 @@ module.exports = {
   removeFromCart,
   getSingleCartProduct,
   getAllUserCartProducts,
+  updatePrice,
 };
