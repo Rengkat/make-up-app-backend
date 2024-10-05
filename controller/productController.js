@@ -1,7 +1,8 @@
 const Product = require("../model/productModel");
 const Review = require("../model/reviewModel");
 const CustomError = require("../errors");
-const path = require("node:path");
+const cloudinary = require("cloudinary").v2;
+const fs = require("node:fs");
 const { StatusCodes } = require("http-status-codes");
 const createProduct = async (req, res) => {
   await Product.create(req.body);
@@ -12,7 +13,7 @@ const getAllProducts = async (req, res, next) => {
     const { name, category, minPrice, maxPrice, sort, featured } = req.query;
     let query = {};
 
-    if (featured) {
+    if (featured !== undefined) {
       query.featured = featured === "true";
     }
 
@@ -24,8 +25,14 @@ const getAllProducts = async (req, res, next) => {
       query.name = { $regex: name, $options: "i" };
     }
 
-    if (minPrice && maxPrice) {
-      query.price = { $gte: parseInt(minPrice, 10), $lte: parseInt(maxPrice, 10) };
+    if (minPrice || maxPrice) {
+      query.price = {};
+      if (minPrice) {
+        query.price.$gte = parseInt(minPrice, 10);
+      }
+      if (maxPrice) {
+        query.price.$lte = parseInt(maxPrice, 10);
+      }
     }
 
     let result = Product.find(query)
@@ -62,8 +69,15 @@ const getAllProducts = async (req, res, next) => {
     result = result.limit(limit).skip(skip);
 
     const products = await result;
-
-    res.status(StatusCodes.OK).json({ products, success: true, page });
+    const totalProducts = await Product.countDocuments(query);
+    const totalPages = Math.ceil(totalProducts / limit);
+    res.status(StatusCodes.OK).json({
+      products,
+      success: true,
+      page,
+      totalPages,
+      totalProducts,
+    });
   } catch (error) {
     next(error);
   }
@@ -126,14 +140,17 @@ const uploadImage = async (req, res, next) => {
     if (!productImage.mimetype.startsWith("image")) {
       throw new CustomError.BadRequestError("Please upload an image");
     }
-    const size = 1024 * 1024 * 2;
+    const size = 1024 * 1024 * 5;
     if (productImage.size > size) {
-      throw new CustomError.BadRequestError("Please upload image less than 2MB");
+      throw new CustomError.BadRequestError("Please upload image less than 5MB");
     }
-    const imagePath = path.join(__dirname, "../public/images", `${productImage.name}`);
-    await productImage.mv(imagePath);
+    const result = await cloudinary.uploader.upload(productImage.tempFilePath, {
+      use_filename: true,
+      folder: "Fullybeauty-images",
+    });
+    fs.unlinkSync(req.files.image.tempFilePath);
     res.status(StatusCodes.CREATED).json({
-      imageSrc: `/images/${productImage.name}`,
+      imageSrc: result.secure_url,
       success: true,
       message: "Image successfully uploaded",
     });

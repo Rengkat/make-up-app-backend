@@ -10,6 +10,7 @@ const cookieParser = require("cookie-parser");
 const fileUpload = require("express-fileupload");
 const cors = require("cors");
 const xss = require("xss-clean");
+const cloudinary = require("cloudinary").v2;
 
 //database
 const connectDB = require("./db/connectDB");
@@ -29,8 +30,9 @@ const errorHandlerMiddleware = require("./middleware/error-handler");
 //middlewares initialization
 app.use(morgan("tiny")); //to see the hit route in the console
 app.use(express.json()); // to get json form of res
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(process.env.JWT_SECRET));
-app.use(fileUpload()); //to upload image
+app.use(fileUpload({ useTempFiles: true })); //to upload image
 app.use(express.static("./public"));
 app.use(xss());
 app.use(
@@ -39,6 +41,12 @@ app.use(
     credentials: true, // Allows cookies to be sent with requests
   })
 );
+cloudinary.config({
+  cloud_name: process.env.CLOUTINARY_CLOUD_NAME,
+  api_key: process.env.CLOUTINARY_CLOUD_API_KEY,
+  api_secret: process.env.CLOUTINARY_CLOUD_API_SECRET,
+});
+
 // Route for the home page
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "doc.html"));
