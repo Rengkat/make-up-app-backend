@@ -14,5 +14,6 @@ router
 router
   .route("/:id")
   .get(authenticateUser, getSingleWishlistProduct)
-  .delete(authenticateUser, removeFromWishlist);
+  .delete(authenticateUser, removeFromWishlist)
+  .post(authenticateUser, addToWishlist);
 module.exports = router;

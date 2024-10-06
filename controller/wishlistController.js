@@ -4,7 +4,7 @@ const Product = require("../model/productModel");
 const { StatusCodes } = require("http-status-codes");
 const addToWishlist = async (req, res, next) => {
   try {
-    const { productId } = req.body;
+    const productId = req.body.product || req.params.id;
 
     // Check if product is valid
     const isValidProduct = await Product.findById(productId);
