@@ -45,7 +45,7 @@ const getAllUserCartProducts = async (req, res, next) => {
 
 const removeFromCart = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id } = req.body;
 
     const cartProduct = await Cart.findById(id);
     if (!cartProduct) {
