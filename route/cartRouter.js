@@ -12,7 +12,7 @@ router.route("/").post(authenticateUser, addToCart).get(authenticateUser, getAll
 router.delete("/remove-product", authenticateUser, removeFromCart);
 router
   .route("/:id")
+  .post(authenticateUser, addToCart)
   .get(authenticateUser, getSingleCartProduct)
-  .delete(authenticateUser, removeFromCart)
   .patch(authenticateUser, updateQuantity);
 module.exports = router;
