@@ -64,11 +64,26 @@ const getAllProducts = async (req, res, next) => {
 
     result = result.limit(limit).skip(skip);
 
+    // Get filtered products
     const products = await result;
     const totalProducts = await Product.countDocuments(query);
     const totalPages = Math.ceil(totalProducts / limit);
 
-    res.status(StatusCodes.OK).json({ products, success: true, page, totalPages, totalProducts });
+    const highestPriceProduct = await Product.findOne().sort({ price: -1 }).select("price").lean();
+    const lowestPriceProduct = await Product.findOne().sort({ price: 1 }).select("price").lean();
+
+    const maxPriceValue = highestPriceProduct ? highestPriceProduct.price : 0;
+    const minPriceValue = lowestPriceProduct ? lowestPriceProduct.price : 0;
+
+    res.status(StatusCodes.OK).json({
+      products,
+      success: true,
+      page,
+      totalPages,
+      totalProducts,
+      minPrice: minPriceValue,
+      maxPrice: maxPriceValue,
+    });
   } catch (error) {
     next(error);
   }
