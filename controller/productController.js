@@ -13,6 +13,7 @@ const getAllProducts = async (req, res, next) => {
     const { name, category, minPrice, maxPrice, sort, featured } = req.query;
     let query = {};
 
+    // Filter logic
     if (featured) {
       query.featured = featured === "true";
     }
@@ -64,16 +65,23 @@ const getAllProducts = async (req, res, next) => {
 
     result = result.limit(limit).skip(skip);
 
-    // Get filtered products
+    // Get highest and lowest price of products in the store
+    const priceStats = await Product.aggregate([
+      {
+        $group: {
+          _id: null,
+          highestPrice: { $max: "$price" },
+          lowestPrice: { $min: "$price" },
+        },
+      },
+    ]);
+
+    const highestPrice = priceStats.length > 0 ? priceStats[0].highestPrice : 0;
+    const lowestPrice = priceStats.length > 0 ? priceStats[0].lowestPrice : 0;
+
     const products = await result;
     const totalProducts = await Product.countDocuments(query);
     const totalPages = Math.ceil(totalProducts / limit);
-
-    const highestPriceProduct = await Product.findOne().sort({ price: -1 }).select("price").lean();
-    const lowestPriceProduct = await Product.findOne().sort({ price: 1 }).select("price").lean();
-
-    const maxPriceValue = highestPriceProduct ? highestPriceProduct.price : 0;
-    const minPriceValue = lowestPriceProduct ? lowestPriceProduct.price : 0;
 
     res.status(StatusCodes.OK).json({
       products,
@@ -81,8 +89,8 @@ const getAllProducts = async (req, res, next) => {
       page,
       totalPages,
       totalProducts,
-      minPrice: minPriceValue,
-      maxPrice: maxPriceValue,
+      highestPrice,
+      lowestPrice,
     });
   } catch (error) {
     next(error);
