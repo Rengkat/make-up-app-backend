@@ -4,12 +4,12 @@ const Product = require("../model/productModel");
 const { StatusCodes } = require("http-status-codes");
 const addToWishlist = async (req, res, next) => {
   try {
-    const productId = req.body.product || req.params.id;
+    const productId = req.body.productId || req.params.id;
 
     // Check if product is valid
     const isValidProduct = await Product.findById(productId);
     if (!isValidProduct) {
-      throw new CustomError.NotFoundError("No product found with id " + productId);
+      throw new CustomError.NotFoundError("No product found");
     }
 
     // Check if the product is already in the wishlist
