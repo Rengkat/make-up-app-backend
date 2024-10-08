@@ -20,55 +20,63 @@ const getAllProducts = async (req, res, next) => {
     if (bestSelling) {
       query.bestSelling = bestSelling === "true";
     }
-
     if (category) {
       query.category = category;
     }
-
     if (name) {
       query.name = { $regex: name, $options: "i" };
     }
-
     if (minPrice && maxPrice) {
       query.price = { $gte: parseInt(minPrice, 10), $lte: parseInt(maxPrice, 10) };
     }
 
-    // Fetch only specific fields: name, price, image
-    let result = Product.find(query, { name: 1, price: 1, image: 1, averageRating: 1 })
+    // Fetch specific fields only (name, price, image, etc.)
+    let result = Product.find(query, {
+      name: 1,
+      price: 1,
+      image: 1,
+      averageRating: 1,
+      featured: 1,
+      bestSelling: 1,
+    })
       .populate("category", "name -_id")
       .populate("reviews", "rating -_id -product");
 
     // Sorting logic
     let sortQuery = {};
-    switch (sort) {
-      case "popularity":
-        sortQuery.popularity = -1;
-        break;
-      case "highToLow":
-        sortQuery.price = -1;
-        break;
-      case "lowToHigh":
-        sortQuery.price = 1;
-        break;
-      case "rating":
-        sortQuery.rating = -1;
-        break;
-      case "latest":
-        sortQuery.createdAt = -1;
-        break;
-      default:
-        break;
+    if (sort) {
+      switch (sort) {
+        case "popularity":
+          sortQuery.popularity = -1;
+          break;
+        case "highToLow":
+          sortQuery.price = -1;
+          break;
+        case "lowToHigh":
+          sortQuery.price = 1;
+          break;
+        case "rating":
+          sortQuery.averageRating = -1;
+          break;
+        case "latest":
+          sortQuery.createdAt = -1;
+          break;
+        default:
+          break;
+      }
     }
 
+    // Apply sorting
     result = result.sort(sortQuery);
 
+    // Pagination logic
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
     result = result.limit(limit).skip(skip);
 
-    // Get highest and lowest price of products in the store
+    // Fetch highest and lowest prices in the store
     const priceStats = await Product.aggregate([
       {
         $group: {
@@ -82,11 +90,13 @@ const getAllProducts = async (req, res, next) => {
     const highestPrice = priceStats.length > 0 ? priceStats[0].highestPrice : 0;
     const lowestPrice = priceStats.length > 0 ? priceStats[0].lowestPrice : 0;
 
+    // Get the filtered products
     const products = await result;
     const totalProducts = await Product.countDocuments(query);
     const totalPages = Math.ceil(totalProducts / limit);
 
-    res.status(StatusCodes.OK).json({
+    // Response
+    res.status(200).json({
       products,
       success: true,
       page,
