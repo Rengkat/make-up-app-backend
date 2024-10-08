@@ -37,6 +37,10 @@ const ProductSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    bestSelling: {
+      type: Boolean,
+      default: false,
+    },
     tags: {
       type: String,
       enum: [],
