@@ -10,12 +10,15 @@ const createProduct = async (req, res) => {
 };
 const getAllProducts = async (req, res, next) => {
   try {
-    const { name, category, minPrice, maxPrice, sort, featured } = req.query;
+    const { name, category, minPrice, maxPrice, sort, featured, bestSelling } = req.query;
     let query = {};
 
     // Filter logic
     if (featured) {
       query.featured = featured === "true";
+    }
+    if (bestSelling) {
+      query.bestSelling = bestSelling === "true";
     }
 
     if (category) {
