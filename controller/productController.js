@@ -10,27 +10,35 @@ const createProduct = async (req, res) => {
 };
 const getAllProducts = async (req, res, next) => {
   try {
-    const { name, category, minPrice, maxPrice, sort, featured, bestSelling } = req.query;
+    const { name, category, minPrice, maxPrice, sort, featured, bestSelling, page = 1 } = req.query;
+
     let query = {};
 
-    // Filter logic
-    if (featured) {
-      query.featured = featured === "true";
-    }
-    if (bestSelling) {
-      query.bestSelling = bestSelling === "true";
-    }
-    if (category) {
-      query.category = category;
-    }
+    // Filter by name
     if (name) {
       query.name = { $regex: name, $options: "i" };
     }
+
+    // Filter by category
+    if (category) {
+      query.category = category;
+    }
+
+    // Price filter
     if (minPrice && maxPrice) {
       query.price = { $gte: parseInt(minPrice, 10), $lte: parseInt(maxPrice, 10) };
     }
 
-    // Fetch specific fields only (name, price, image, etc.)
+    // Filter by featured and best-selling only if they are provided
+    if (featured !== undefined) {
+      query.featured = featured === "true";
+    }
+
+    if (bestSelling !== undefined) {
+      query.bestSelling = bestSelling === "true";
+    }
+
+    // Build the base query
     let result = Product.find(query, {
       name: 1,
       price: 1,
@@ -44,7 +52,7 @@ const getAllProducts = async (req, res, next) => {
 
     // Sorting logic
     let sortQuery = {};
-    if (sort) {
+    if (sort && sort !== "default") {
       switch (sort) {
         case "popularity":
           sortQuery.popularity = -1;
@@ -70,13 +78,16 @@ const getAllProducts = async (req, res, next) => {
     result = result.sort(sortQuery);
 
     // Pagination logic
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 10;
+    const limit = 10;
     const skip = (page - 1) * limit;
-
     result = result.limit(limit).skip(skip);
 
-    // Fetch highest and lowest prices in the store
+    // Fetch the products
+    const products = await result;
+    const totalProducts = await Product.countDocuments(query);
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    // Get highest and lowest price in the store
     const priceStats = await Product.aggregate([
       {
         $group: {
@@ -89,11 +100,6 @@ const getAllProducts = async (req, res, next) => {
 
     const highestPrice = priceStats.length > 0 ? priceStats[0].highestPrice : 0;
     const lowestPrice = priceStats.length > 0 ? priceStats[0].lowestPrice : 0;
-
-    // Get the filtered products
-    const products = await result;
-    const totalProducts = await Product.countDocuments(query);
-    const totalPages = Math.ceil(totalProducts / limit);
 
     // Response
     res.status(200).json({
