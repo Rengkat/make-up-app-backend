@@ -44,18 +44,18 @@ const getAllProducts = async (req, res, next) => {
       price: 1,
       image: 1,
       averageRating: 1,
+      numOfReviews: 1,
       featured: 1,
       bestSelling: 1,
     })
       .populate("category", "name -_id")
       .populate("reviews", "rating -_id -product");
 
-    // Sorting logic
     let sortQuery = {};
     if (sort && sort !== "default") {
       switch (sort) {
         case "popularity":
-          sortQuery.popularity = -1;
+          sortQuery.numOfReviews = -1;
           break;
         case "highToLow":
           sortQuery.price = -1;
@@ -87,20 +87,6 @@ const getAllProducts = async (req, res, next) => {
     const totalProducts = await Product.countDocuments(query);
     const totalPages = Math.ceil(totalProducts / limit);
 
-    // Get highest and lowest price in the store
-    const priceStats = await Product.aggregate([
-      {
-        $group: {
-          _id: null,
-          highestPrice: { $max: "$price" },
-          lowestPrice: { $min: "$price" },
-        },
-      },
-    ]);
-
-    const highestPrice = priceStats.length > 0 ? priceStats[0].highestPrice : 0;
-    const lowestPrice = priceStats.length > 0 ? priceStats[0].lowestPrice : 0;
-
     // Response
     res.status(200).json({
       products,
@@ -108,8 +94,6 @@ const getAllProducts = async (req, res, next) => {
       page,
       totalPages,
       totalProducts,
-      highestPrice,
-      lowestPrice,
     });
   } catch (error) {
     next(error);
