@@ -4,7 +4,7 @@ const CustomError = require("../errors");
 const cloudinary = require("cloudinary").v2;
 const fs = require("node:fs");
 const { StatusCodes } = require("http-status-codes");
-const createProduct = async (req, res) => {
+const createProduct = async (req, res, next) => {
   await Product.create(req.body);
   res.status(StatusCodes.CREATED).json({ message: "Product successfully added" });
 };

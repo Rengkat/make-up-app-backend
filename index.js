@@ -35,12 +35,21 @@ app.use(cookieParser(process.env.JWT_SECRET));
 app.use(fileUpload({ useTempFiles: true })); //to upload image
 app.use(express.static("./public"));
 app.use(xss());
+const allowedOrigins = ["http://localhost:3000", "https://fullybeauty.vercel.app/"];
+
 app.use(
   cors({
-    origin: "http://localhost:3000", // Replace with your frontend port
-    credentials: true, // Allows cookies to be sent with requests
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
   })
 );
+
 cloudinary.config({
   cloud_name: process.env.CLOUTINARY_CLOUD_NAME,
   api_key: process.env.CLOUTINARY_CLOUD_API_KEY,
