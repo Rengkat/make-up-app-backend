@@ -35,7 +35,7 @@ app.use(cookieParser(process.env.JWT_SECRET));
 app.use(fileUpload({ useTempFiles: true })); //to upload image
 app.use(express.static("./public"));
 app.use(xss());
-const allowedOrigins = ["http://localhost:3000", "https://fullybeauty.vercel.app/"];
+const allowedOrigins = ["http://localhost:3000", "https://fullybeauty.vercel.app"];
 
 app.use(
   cors({
