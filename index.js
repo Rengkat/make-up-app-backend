@@ -40,7 +40,7 @@ const allowedOrigins = ["http://localhost:3000", "https://fullybeauty.vercel.app
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
