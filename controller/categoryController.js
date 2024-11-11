@@ -29,7 +29,7 @@ const getAllCategories = async (req, res, next) => {
 const getSingleCategory = async (req, res, next) => {
   try {
     const categoryId = req.params.id;
-    const category = await Category.findById(categoryId);
+    const category = await Category.findById(categoryId).populate("products");
     if (!category) {
       throw new CustomError.NotFoundError(`Category not found with ID ${categoryId}`);
     }

@@ -2,12 +2,31 @@ const Product = require("../model/productModel");
 const Review = require("../model/reviewModel");
 const CustomError = require("../errors");
 const cloudinary = require("cloudinary").v2;
+const Category = require("../model/categoryModel");
 const fs = require("node:fs");
 const { StatusCodes } = require("http-status-codes");
 const createProduct = async (req, res, next) => {
-  await Product.create(req.body);
-  res.status(StatusCodes.CREATED).json({ message: "Product successfully added" });
+  try {
+    const { category: categoryId } = req.body;
+
+    // Find the category by ID
+    const category = await Category.findById(categoryId);
+    if (!category) {
+      throw new CustomError.NotFoundError("Category not found");
+    }
+
+    // Create the product
+    const product = await Product.create(req.body);
+
+    // Add the product to the category's products array
+    category.products.push(product._id);
+    await category.save();
+    res.status(StatusCodes.CREATED).json({ message: "Product successfully added", product });
+  } catch (error) {
+    next(error);
+  }
 };
+
 const getAllProducts = async (req, res, next) => {
   try {
     const { name, category, minPrice, maxPrice, sort, featured, bestSelling, page = 1 } = req.query;
