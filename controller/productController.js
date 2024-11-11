@@ -3,16 +3,20 @@ const Review = require("../model/reviewModel");
 const CustomError = require("../errors");
 const cloudinary = require("cloudinary").v2;
 const Category = require("../model/categoryModel");
+const Brand = require("../model/brandModel");
 const fs = require("node:fs");
 const { StatusCodes } = require("http-status-codes");
 const createProduct = async (req, res, next) => {
   try {
-    const { category: categoryId } = req.body;
+    const { category: categoryId, brand: brandId } = req.body;
 
-    // Find the category by ID
     const category = await Category.findById(categoryId);
+    const brand = await Brand.findById(brandId);
     if (!category) {
       throw new CustomError.NotFoundError("Category not found");
+    }
+    if (!brand) {
+      throw new CustomError.NotFoundError("Brand not found");
     }
 
     // Create the product
@@ -20,7 +24,9 @@ const createProduct = async (req, res, next) => {
 
     // Add the product to the category's products array
     category.products.push(product._id);
+    brand.products.push(product._id);
     await category.save();
+    await brand.save();
     res.status(StatusCodes.CREATED).json({ message: "Product successfully added", product });
   } catch (error) {
     next(error);
