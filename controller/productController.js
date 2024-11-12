@@ -8,17 +8,13 @@ const fs = require("node:fs");
 const { StatusCodes } = require("http-status-codes");
 const createProduct = async (req, res, next) => {
   try {
-    const { category: categoryId, brand: brandId } = req.body;
+    const { category: categoryId, brand: brandId, ...productData } = req.body;
 
+    if (!categoryId || !brandId) {
+      throw new CustomError.BadRequestError("Category and Brand are required");
+    }
     const category = await Category.findById(categoryId);
     const brand = await Brand.findById(brandId);
-    if (!category) {
-      throw new CustomError.NotFoundError("Category not found");
-    }
-    if (!brand) {
-      throw new CustomError.NotFoundError("Brand not found");
-    }
-
     // Create the product
     const product = await Product.create(req.body);
 
