@@ -19,7 +19,7 @@ const addBrand = async (req, res, next) => {
 };
 const getAllBrands = async (req, res, next) => {
   try {
-    const brands = await Brand.find();
+    const brands = await Brand.find({}).select("name -_id");
     res.status(StatusCodes.OK).json({ success: true, brands });
   } catch (error) {
     next(error);
@@ -30,7 +30,7 @@ const getSingleBrand = async (req, res, next) => {
   try {
     const brandId = req.params.id;
     const brand = await Brand.findById(brandId).populate("products");
-    if (!category) {
+    if (!brand) {
       throw new CustomError.NotFoundError(`Category not found with ID ${brandId}`);
     }
     res.status(StatusCodes.OK).json({ brand, success: true });

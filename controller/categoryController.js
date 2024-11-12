@@ -38,6 +38,34 @@ const getSingleCategory = async (req, res, next) => {
     next(error);
   }
 };
+const updateCategory = async (req, res, next) => {
+  try {
+    const { id: categoryId } = req.params;
+    const { name } = req.body;
+
+    if (!name) {
+      throw new CustomError.BadRequestError("Please provide a category name.");
+    }
+
+    const category = await Category.findByIdAndUpdate(
+      categoryId,
+      { name },
+      { new: true, runValidators: true }
+    );
+
+    if (!category) {
+      throw new CustomError.NotFoundError("Category not found.");
+    }
+
+    res.status(StatusCodes.OK).json({
+      message: "Category updated successfully",
+      success: true,
+      category,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 const deleteCategory = async (req, res, next) => {
   try {
@@ -57,4 +85,5 @@ module.exports = {
   getAllCategories,
   getSingleCategory,
   deleteCategory,
+  updateCategory,
 };

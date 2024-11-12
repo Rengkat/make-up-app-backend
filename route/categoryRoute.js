@@ -4,6 +4,7 @@ const {
   getAllCategories,
   getSingleCategory,
   deleteCategory,
+  updateCategory,
 } = require("../controller/categoryController");
 const { authenticateUser, authorizationPermission } = require("../middleware/authentication");
 const router = express.Router();
@@ -12,5 +13,6 @@ router.get("/", getAllCategories);
 router
   .route("/:id")
   .get(getSingleCategory)
-  .delete(authenticateUser, authorizationPermission, deleteCategory);
+  .delete(authenticateUser, authorizationPermission, deleteCategory)
+  .patch(authenticateUser, authorizationPermission, updateCategory);
 module.exports = router;
