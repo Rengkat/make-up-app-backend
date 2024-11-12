@@ -38,7 +38,33 @@ const getSingleBrand = async (req, res, next) => {
     next(error);
   }
 };
+const updateBrand = async (req, res, next) => {
+  try {
+    const { id: brandId } = req.params;
+    const { name } = req.body;
 
+    if (!name) {
+      throw new CustomError.BadRequestError("Please provide a brand name.");
+    }
+
+    const brand = await Brand.findByIdAndUpdate(
+      brandId,
+      { name },
+      { new: true, runValidators: true }
+    );
+
+    if (!brand) {
+      throw new CustomError.NotFoundError("Category not found.");
+    }
+
+    res.status(StatusCodes.OK).json({
+      message: "Brand updated successfully",
+      success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 const deleteBrand = async (req, res, next) => {
   try {
     const brandId = req.params.id;
@@ -52,4 +78,4 @@ const deleteBrand = async (req, res, next) => {
   }
 };
 
-module.exports = { addBrand, getAllBrands, getSingleBrand, deleteBrand };
+module.exports = { addBrand, getAllBrands, getSingleBrand, deleteBrand, updateBrand };

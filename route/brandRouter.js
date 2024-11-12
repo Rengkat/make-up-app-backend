@@ -4,6 +4,7 @@ const {
   getAllBrands,
   getSingleBrand,
   deleteBrand,
+  updateBrand,
 } = require("../controller/brandController");
 const { authenticateUser, authorizationPermission } = require("../middleware/authentication");
 const router = express.Router();
@@ -12,5 +13,6 @@ router.get("/", getAllBrands);
 router
   .route("/:id")
   .get(getSingleBrand)
-  .delete(authenticateUser, authorizationPermission, deleteBrand);
+  .delete(authenticateUser, authorizationPermission, deleteBrand)
+  .patch(authenticateUser, authorizationPermission, updateBrand);
 module.exports = router;
