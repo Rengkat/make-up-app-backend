@@ -97,7 +97,7 @@ const getAllProducts = async (req, res, next) => {
 
     // Apply sorting
     result = result.sort(sortQuery);
-
+    console.log(query);
     // Pagination logic
     const limit = 10;
     const skip = (page - 1) * limit;
