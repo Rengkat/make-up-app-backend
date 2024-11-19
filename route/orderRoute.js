@@ -14,3 +14,4 @@ router
   .get(authenticateUser, authorizationPermission, getAllOrders);
 router.get("/user-orders", authenticateUser, getAllUserOrders);
 router.route("/:id").get(authenticateUser, getSingleOder).patch(authenticateUser, updateOrder);
+module.exports = router;
