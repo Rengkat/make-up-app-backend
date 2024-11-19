@@ -5,7 +5,8 @@ const {
   getAllOrders,
   getAllUserOrders,
   updateOrder,
-  getSingleOder,
+  getSingleOrder,
+  verifyTransaction,
 } = require("../controller/orderController");
 const { authenticateUser, authorizationPermission } = require("../middleware/authentication");
 router
@@ -13,5 +14,6 @@ router
   .post(authenticateUser, createOrder)
   .get(authenticateUser, authorizationPermission, getAllOrders);
 router.get("/user-orders", authenticateUser, getAllUserOrders);
-router.route("/:id").get(authenticateUser, getSingleOder).patch(authenticateUser, updateOrder);
+router.get("/verify/:id", authenticateUser, verifyTransaction);
+router.route("/:id").get(authenticateUser, getSingleOrder).patch(authenticateUser, updateOrder);
 module.exports = router;

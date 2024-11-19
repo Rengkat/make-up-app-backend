@@ -80,6 +80,52 @@ const createOrder = async (req, res, next) => {
     next(error);
   }
 };
+const verifyTransaction = async (req, res, next) => {
+  try {
+    const { id: orderId } = req.params;
+
+    // Check if order exists
+    const order = await Order.findById(orderId);
+    if (!order) {
+      throw new CustomError.NotFoundError("Order not found");
+    }
+
+    // If the order is already paid, return early
+    if (order.status === "paid") {
+      return res.status(StatusCodes.OK).json({
+        status: "success",
+        message: "Order already paid",
+        data: order,
+      });
+    }
+
+    // Verify the transaction with Paystack
+    const response = await paystack.transaction.verify({ reference: order.paymentIntentId });
+
+    if (response.data.status === "success") {
+      // Update order status to paid
+      order.status = "paid";
+      await order.save();
+
+      return res.status(StatusCodes.OK).json({
+        status: "success",
+        message: "Payment verified successfully",
+        data: order,
+      });
+    } else {
+      // Update order status to failed if payment is unsuccessful
+      order.status = "failed";
+      await order.save();
+
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        status: "error",
+        message: "Payment verification failed",
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
 
 // Get all orders (for admin or other roles with appropriate permissions)
 const getAllOrders = async (req, res, next) => {
@@ -162,4 +208,5 @@ module.exports = {
   getAllUserOrders,
   getSingleOrder,
   updateOrder,
+  verifyTransaction,
 };
