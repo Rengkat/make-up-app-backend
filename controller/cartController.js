@@ -7,7 +7,7 @@ const addToCart = async (req, res, next) => {
     const productId = req.body.id || req.params.id;
 
     if (!productId) {
-      throw new CustomError.BadRequestError("Please provide product id and quantity");
+      throw new CustomError.BadRequestError("Please provide product id");
     }
 
     const isValidProduct = await Product.findById(productId);

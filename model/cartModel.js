@@ -24,8 +24,8 @@ const CartSchema = new mongoose.Schema(
   }
 );
 
-// Virtual for calculating total amount
-CartSchema.virtual("totalAmount").get(function () {
+// Virtual for calculating sub-total amount
+CartSchema.virtual("subTotalAmount").get(function () {
   return this.product.price * this.quantity;
 });
 
