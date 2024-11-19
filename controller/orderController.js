@@ -4,6 +4,8 @@ const Product = require("../model/productModel");
 const User = require("../model/userModel");
 const Order = require("../model/orderModel");
 const paystack = require("paystack-api")(process.env.PAYSTACK_SECRET_KEY);
+
+// Create order
 const createOrder = async (req, res, next) => {
   try {
     const { items: cartItems, tax, shippingFee } = req.body;
@@ -49,11 +51,13 @@ const createOrder = async (req, res, next) => {
 
     const total = tax + shippingFee + subtotal;
 
+    // Initialize Paystack payment
     const response = await paystack.transaction.initialize({
       email: user.email,
-      amount: total * 100,
+      amount: total * 100, // Paystack uses kobo (1 kobo = 1/100th of a Naira)
     });
 
+    // Create the order in the database
     const newOrder = await Order.create({
       orderItems,
       tax,
@@ -66,6 +70,7 @@ const createOrder = async (req, res, next) => {
       status: "pending",
     });
 
+    // Respond with the Paystack authorization URL for the frontend to redirect to Paystack for payment
     res.status(StatusCodes.CREATED).json({
       status: "success",
       authorization_url: response.data.authorization_url,
@@ -76,12 +81,85 @@ const createOrder = async (req, res, next) => {
   }
 };
 
+// Get all orders (for admin or other roles with appropriate permissions)
 const getAllOrders = async (req, res, next) => {
-  res.send("Get all orders");
+  try {
+    const orders = await Order.find().populate("user", "name email"); // Populating user details (optional)
+    res.status(StatusCodes.OK).json({
+      status: "success",
+      data: orders,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
+
+// Get all orders for the authenticated user
 const getAllUserOrders = async (req, res, next) => {
-  res.send("get all user orders");
+  try {
+    const orders = await Order.find({ user: req.user.id }).populate("user", "name email");
+    res.status(StatusCodes.OK).json({
+      status: "success",
+      data: orders,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
-const getSingleOder = async (req, res, next) => {};
-const updateOrder = async (req, res, next) => {};
-module.exports = { createOrder, getAllOrders, getAllUserOrders, getSingleOder, updateOrder };
+
+// Get a single order by its ID
+const getSingleOrder = async (req, res, next) => {
+  const { orderId } = req.params;
+
+  try {
+    const order = await Order.findById(orderId)
+      .populate("user", "name email")
+      .populate("orderItems.product");
+    if (!order) {
+      throw new CustomError.NotFoundError("Order not found");
+    }
+    res.status(StatusCodes.OK).json({
+      status: "success",
+      data: order,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Update an order status (e.g., from 'pending' to 'shipped' or 'delivered')
+const updateOrder = async (req, res, next) => {
+  const { orderId } = req.params;
+  const { status } = req.body; // e.g., 'shipped', 'delivered', 'canceled'
+
+  try {
+    if (!status) {
+      throw new CustomError.BadRequestError("Status is required to update the order");
+    }
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      throw new CustomError.NotFoundError("Order not found");
+    }
+
+    // Update the order status
+    order.status = status;
+    await order.save();
+
+    res.status(StatusCodes.OK).json({
+      status: "success",
+      message: `Order status updated to ${status}`,
+      data: order,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  createOrder,
+  getAllOrders,
+  getAllUserOrders,
+  getSingleOrder,
+  updateOrder,
+};
