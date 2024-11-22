@@ -14,6 +14,6 @@ router
   .post(authenticateUser, createOrder)
   .get(authenticateUser, authorizationPermission, getAllOrders);
 router.get("/user-orders", authenticateUser, getAllUserOrders);
-router.get("/verify/:id", authenticateUser, verifyTransaction);
+router.post("/verify/:id", authenticateUser, verifyTransaction);
 router.route("/:id").get(authenticateUser, getSingleOrder).patch(authenticateUser, updateOrder);
 module.exports = router;

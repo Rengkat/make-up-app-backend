@@ -3,6 +3,7 @@ const CustomError = require("../errors");
 const Product = require("../model/productModel");
 const User = require("../model/userModel");
 const Order = require("../model/orderModel");
+const Cart = require("../model/cartModel");
 const paystack = require("paystack-api")(process.env.PAYSTACK_SECRET_KEY);
 
 // Create order
@@ -107,6 +108,9 @@ const verifyTransaction = async (req, res, next) => {
       order.status = "paid";
       await order.save();
 
+      //clear the cart
+      await Cart.deleteMany({ user: order.user });
+
       return res.status(StatusCodes.OK).json({
         status: "success",
         message: "Payment verified successfully",
@@ -130,7 +134,7 @@ const verifyTransaction = async (req, res, next) => {
 // Get all orders (for admin or other roles with appropriate permissions)
 const getAllOrders = async (req, res, next) => {
   try {
-    const orders = await Order.find().populate("user", "name email"); // Populating user details (optional)
+    const orders = await Order.find().populate("user", "fullName email"); // Populating user details (optional)
     res.status(StatusCodes.OK).json({
       status: "success",
       data: orders,
@@ -143,7 +147,7 @@ const getAllOrders = async (req, res, next) => {
 // Get all orders for the authenticated user
 const getAllUserOrders = async (req, res, next) => {
   try {
-    const orders = await Order.find({ user: req.user.id }).populate("user", "name email");
+    const orders = await Order.find({ user: req.user.id }).populate("user", "fullName email");
     res.status(StatusCodes.OK).json({
       status: "success",
       data: orders,
@@ -159,7 +163,7 @@ const getSingleOrder = async (req, res, next) => {
 
   try {
     const order = await Order.findById(orderId)
-      .populate("user", "name email")
+      .populate("user", "fullName email")
       .populate("orderItems.product");
     if (!order) {
       throw new CustomError.NotFoundError("Order not found");
