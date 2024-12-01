@@ -52,13 +52,7 @@ const createOrder = async (req, res, next) => {
 
     const total = tax + shippingFee + subtotal;
 
-    // Initialize Paystack payment
-    const response = await paystack.transaction.initialize({
-      email: user.email,
-      amount: total * 100, // Paystack uses kobo (1 kobo = 1/100th of a Naira)
-    });
-
-    // Create the order in the database
+    // Create the order in the database first
     const newOrder = await Order.create({
       orderItems,
       tax,
@@ -66,10 +60,20 @@ const createOrder = async (req, res, next) => {
       subtotal,
       total,
       user: req.user.id,
-      clientSecret: response.data.authorization_url,
-      paymentIntentId: response.data.reference,
       status: "pending",
     });
+
+    // Initialize Paystack payment with the orderId
+    const response = await paystack.transaction.initialize({
+      email: user.email,
+      amount: total * 100, // Paystack uses kobo (1 kobo = 1/100th of a Naira)
+      callback_url: `${process.env.ORIGIN}/payment/verify?orderId=${newOrder._id}`,
+    });
+
+    // Update the order with payment details
+    newOrder.clientSecret = response.data.authorization_url;
+    newOrder.paymentIntentId = response.data.reference;
+    await newOrder.save();
 
     // Respond with the Paystack authorization URL for the frontend to redirect to Paystack for payment
     res.status(StatusCodes.CREATED).json({
@@ -91,7 +95,7 @@ const verifyTransaction = async (req, res, next) => {
       throw new CustomError.NotFoundError("Order not found");
     }
 
-    // If the order is already paid, return early
+    // Check if order already paid
     if (order.status === "paid") {
       return res.status(StatusCodes.OK).json({
         status: "success",
@@ -100,15 +104,17 @@ const verifyTransaction = async (req, res, next) => {
       });
     }
 
-    // Verify the transaction with Paystack
+    // Verify transaction with Paystack
+    if (!order.paymentIntentId) {
+      throw new CustomError.BadRequestError("Payment reference is missing");
+    }
+
     const response = await paystack.transaction.verify({ reference: order.paymentIntentId });
 
-    if (response.data.status === "success") {
-      // Update order status to paid
+    if (response && response.data && response.data.status === "success") {
+      // Mark order as paid and clear cart
       order.status = "paid";
       await order.save();
-
-      //clear the cart
       await Cart.deleteMany({ user: order.user });
 
       return res.status(StatusCodes.OK).json({
@@ -117,7 +123,7 @@ const verifyTransaction = async (req, res, next) => {
         data: order,
       });
     } else {
-      // Update order status to failed if payment is unsuccessful
+      // Mark order as failed if payment is unsuccessful
       order.status = "failed";
       await order.save();
 

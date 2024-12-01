@@ -13,20 +13,22 @@ const attachTokenToResponse = ({ res, accessTokenPayload, refreshToken }) => {
   const longTime = 1000 * 60 * 60 * 24 * 30;
   const shortTime = 1000 * 60 * 5;
 
+  const isProduction = process.env.NODE_ENV === "production";
+
   res.cookie("accessToken", accessTokenJWT, {
     httpOnly: true,
     maxAge: shortTime,
     signed: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "None",
+    secure: isProduction, // Secure only in production
+    sameSite: isProduction ? "None" : "Lax", // 'Lax' for development, 'None' for cross-origin in production
   });
 
   res.cookie("refreshToken", refreshTokenJWT, {
     httpOnly: true,
     expires: new Date(Date.now() + longTime),
     signed: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "None",
+    secure: isProduction, // Secure only in production
+    sameSite: isProduction ? "None" : "Lax", // 'Lax' for development, 'None' for cross-origin in production
   });
 };
 

@@ -4,6 +4,7 @@ const { attachTokenToResponse } = require("../utils");
 const Token = require("../model/Token");
 const authenticateUser = async (req, res, next) => {
   const { accessToken, refreshToken } = req.signedCookies;
+
   try {
     if (accessToken) {
       const payload = isTokenVerified(accessToken);
