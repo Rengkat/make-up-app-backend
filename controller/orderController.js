@@ -165,7 +165,7 @@ const getAllUserOrders = async (req, res, next) => {
 
 // Get a single order by its ID
 const getSingleOrder = async (req, res, next) => {
-  const { orderId } = req.params;
+  const { id: orderId } = req.params;
 
   try {
     const order = await Order.findById(orderId)
@@ -185,7 +185,7 @@ const getSingleOrder = async (req, res, next) => {
 
 // Update an order status (e.g., from 'pending' to 'shipped' or 'delivered')
 const updateOrder = async (req, res, next) => {
-  const { orderId } = req.params;
+  const { id: orderId } = req.params;
   const { status } = req.body; // e.g., 'shipped', 'delivered', 'canceled'
 
   try {
