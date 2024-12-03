@@ -9,7 +9,7 @@ const paystack = require("paystack-api")(process.env.PAYSTACK_SECRET_KEY);
 // Create order
 const createOrder = async (req, res, next) => {
   try {
-    const { items: cartItems, tax, shippingFee } = req.body;
+    const { items: cartItems, tax, shippingFee, address, additionalInfo } = req.body;
 
     // Fetch user from database
     const user = await User.findById(req.user.id);
@@ -23,8 +23,13 @@ const createOrder = async (req, res, next) => {
     if (!cartItems || cartItems.length < 1) {
       throw new CustomError.BadRequestError("No cart items provided");
     }
-    if (!tax || !shippingFee) {
-      throw new CustomError.BadRequestError("Please provide tax and shipping fee");
+    if (tax === undefined || shippingFee === undefined) {
+      throw new Error("Please provide tax and shipping fee");
+    }
+
+    const selectedAddress = user.addresses.find((addr) => addr._id.toString() === address);
+    if (!selectedAddress) {
+      throw new CustomError.BadRequestError("Invalid delivery address provided");
     }
 
     let orderItems = [];
@@ -61,6 +66,8 @@ const createOrder = async (req, res, next) => {
       total,
       user: req.user.id,
       status: "pending",
+      additionalInfo,
+      address,
     });
 
     // Initialize Paystack payment with the orderId
@@ -140,7 +147,7 @@ const verifyTransaction = async (req, res, next) => {
 // Get all orders (for admin or other roles with appropriate permissions)
 const getAllOrders = async (req, res, next) => {
   try {
-    const orders = await Order.find().populate("user", "fullName email"); // Populating user details (optional)
+    const orders = await Order.find().populate("user", "firstName surname email");
     res.status(StatusCodes.OK).json({
       status: "success",
       data: orders,

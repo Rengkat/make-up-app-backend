@@ -47,6 +47,8 @@ const OrderSchema = mongoose.Schema(
       type: String,
       required: false,
     },
+    address: { type: String, required: true },
+    additionalInfo: { type: String, required: false },
   },
   { timestamps: true }
 );
