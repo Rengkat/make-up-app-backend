@@ -206,7 +206,7 @@ const updateOrder = async (req, res, next) => {
     }
 
     // Update the order status
-    order.status = status;
+    order.deliveryStatus = status;
     await order.save();
 
     res.status(StatusCodes.OK).json({

@@ -124,17 +124,27 @@ const getAllProducts = async (req, res, next) => {
 const getSingleProduct = async (req, res, next) => {
   try {
     const productId = req.params.id;
+
     const product = await Product.findById(productId)
-      .populate("reviews")
+      .populate({
+        path: "reviews",
+        populate: {
+          path: "user",
+          select: "name -_id",
+        },
+      })
       .populate("category", "name -_id");
+
     if (!product) {
       throw new CustomError.BadRequestError(`No product with id ${productId}`);
     }
+
     res.status(StatusCodes.OK).json({ success: true, product });
   } catch (error) {
     next(error);
   }
 };
+
 const updateProduct = async (req, res, next) => {
   const { id: productId } = req.params;
 

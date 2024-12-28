@@ -4,32 +4,45 @@ const CustomError = require("../errors");
 const { StatusCodes } = require("http-status-codes");
 const createReview = async (req, res, next) => {
   try {
-    const { product: productId } = req.body;
+    const { product: productId, comment, rating } = req.body;
 
-    // Check if product is valid
-    const isProductValid = await Product.findOne({ _id: productId });
-    if (!isProductValid) {
-      throw new CustomError.NotFoundError(`Not found product with id: ${productId}`);
+    // Validate product existence
+    const product = await Product.findById(productId);
+    if (!product) {
+      throw new CustomError.NotFoundError(`Product not found`);
     }
 
-    // Check if review has been added by the same user for the same product
-    const existedReview = await Review.findOne({ user: req.user.id, product: productId });
-    if (existedReview) {
-      throw new CustomError.BadRequestError("You have reviewed this product already!");
+    // Ensure the user has not already reviewed the product
+    const existingReview = await Review.findOne({ user: req.user.id, product: productId });
+    if (existingReview) {
+      throw new CustomError.BadRequestError("You have already reviewed this product!");
     }
 
-    req.body.user = req.user.id; // Add userId to the request body to add them at the same time
-    await Review.create(req.body);
+    // Add the user ID to the review body
+    const reviewData = {
+      user: req.user.id,
+      product: productId,
+      comment,
+      rating,
+    };
 
-    res.status(StatusCodes.CREATED).json({ success: true, message: "Review submitted" });
+    // Create the review
+    const review = await Review.create(reviewData);
+
+    res.status(StatusCodes.CREATED).json({
+      success: true,
+      message: "Review submitted successfully",
+      data: review,
+    });
   } catch (error) {
     next(error);
   }
 };
 
 const getAllReviews = async (req, res, next) => {
+  const { productId } = req.query;
   try {
-    const reviews = await Review.find({});
+    const reviews = await Review.find({ product: productId }).populate("product");
 
     res.status(StatusCodes.OK).json(reviews);
   } catch (error) {
