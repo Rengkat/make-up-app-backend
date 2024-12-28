@@ -130,7 +130,7 @@ const getSingleProduct = async (req, res, next) => {
         path: "reviews",
         populate: {
           path: "user",
-          select: "name -_id",
+          select: "firstName surname -_id",
         },
       })
       .populate("category", "name -_id");
