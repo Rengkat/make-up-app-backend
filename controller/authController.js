@@ -222,6 +222,9 @@ const loginAdmin = async (req, res, next) => {
     if (!user.isVerified) {
       throw new CustomError.UnauthenticatedError("Please verify your email");
     }
+    if (user.role !== "admin") {
+      throw new CustomError.UnauthorizedError("Access denied. Admins only.");
+    }
     const accessTokenPayload = createUserPayload(user);
 
     //initialize refresh token
