@@ -200,6 +200,65 @@ const loginUser = async (req, res, next) => {
     next(error);
   }
 };
+
+const loginAdmin = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      throw new CustomError.BadRequestError("Please provide email and password");
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw new CustomError.UnauthenticatedError("Invalid credentials");
+    }
+
+    const isPasswordCorrect = await user.comparePassword(password);
+    if (!isPasswordCorrect) {
+      throw new CustomError.UnauthenticatedError("Please enter valid credentials");
+    }
+
+    if (!user.isVerified) {
+      throw new CustomError.UnauthenticatedError("Please verify your email");
+    }
+    const accessTokenPayload = createUserPayload(user);
+
+    //initialize refresh token
+    let refreshToken = "";
+    //check existing token first (refresh token). it may be around
+    const existingToken = await Token.findOne({ user: user._id });
+    if (existingToken) {
+      const { isValid } = existingToken;
+      if (!isValid) {
+        throw new CustomError.UnauthenticatedError("Invalid credentials");
+      }
+      //then reset the accessToken and refreshToken
+      refreshToken = existingToken.refreshToken;
+      attachTokenToResponse({ res, accessTokenPayload, refreshToken });
+      return res.status(StatusCodes.OK).json({
+        success: true,
+        message: "Successfully logged in",
+        user: accessTokenPayload,
+      });
+    }
+    refreshToken = crypto.randomBytes(40).toString("hex");
+    const ip = req.ip;
+    const userAgent = req.headers["user-agent"];
+    // the userToken should have all what is in the model and attach it to the response
+    const refreshTokenPayload = { refreshToken, ip, userAgent, user: user._id };
+    await Token.create(refreshTokenPayload);
+    attachTokenToResponse({ res, accessTokenPayload, refreshToken });
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      user: accessTokenPayload,
+      message: "Successfully logged in",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
@@ -294,6 +353,7 @@ module.exports = {
   verifyEmail,
   requestNewVerificationToken,
   loginUser,
+  loginAdmin,
   logoutUser,
   forgotPassword,
   resetPassword,

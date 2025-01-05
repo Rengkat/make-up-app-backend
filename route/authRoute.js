@@ -17,5 +17,6 @@ router.post("/new-verification", requestNewVerificationToken);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
 router.post("/login", loginUser);
+router.post("/login-admin", loginUser);
 router.post("/logout", authenticateUser, logoutUser);
 module.exports = router;
