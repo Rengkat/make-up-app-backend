@@ -26,6 +26,7 @@ const reviewRoute = require("./route/reviewRoute");
 const wishlistRoute = require("./route/wishlistRoute");
 const cartRoute = require("./route/cartRouter");
 const orderRoute = require("./route/orderRoute");
+const statsRoute = require("./route/statsRouter");
 //middlewares importations
 const notFoundMiddleware = require("./middleware/note-found");
 const errorHandlerMiddleware = require("./middleware/error-handler");
@@ -74,6 +75,7 @@ app.use("/api/reviews", reviewRoute);
 app.use("/api/wishlist", wishlistRoute);
 app.use("/api/cart", cartRoute);
 app.use("/api/orders", orderRoute);
+app.use("/api/stats", statsRoute);
 
 //errors initialization
 app.use(notFoundMiddleware);
