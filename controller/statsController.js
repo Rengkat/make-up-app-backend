@@ -35,5 +35,51 @@ const getAllStats = async (req, res, next) => {
     next(error);
   }
 };
+const getMonthlyAppointments = async (req, res, next) => {
+  try {
+    const monthlyAppointments = await Appointments.aggregate([
+      // Group by year and month and count the appointments
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      // Sort by year and month descending
+      { $sort: { "_id.year": -1, "_id.month": -1 } },
+      // Limit to the last 6 months
+      { $limit: 6 },
+    ]);
 
-module.exports = { getAllStats };
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+
+    // Format the response with month names
+    const formattedData = monthlyAppointments.map((item) => ({
+      year: item._id.year,
+      month: monthNames[item._id.month - 1],
+      count: item.count,
+    }));
+
+    res.status(StatusCodes.OK).json({ success: true, data: formattedData });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getAllStats, getMonthlyAppointments };
