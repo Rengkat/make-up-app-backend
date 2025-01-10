@@ -128,5 +128,47 @@ const getMonthlySales = async (req, res, next) => {
     next(error);
   }
 };
+const getTotalAppointmentsServiceType = async (req, res, next) => {
+  try {
+    // Aggregate the total count for each service type
+    const appointmentsType = await Appointments.aggregate([
+      {
+        $group: {
+          _id: "$type", // Group by service type
+          count: { $sum: 1 }, // Count the number of appointments for each type
+        },
+      },
+    ]);
 
-module.exports = { getAllStats, getMonthlyAppointments, getMonthlySales };
+    // Calculate the total number of appointments
+    const totalAppointments = appointmentsType.reduce((acc, curr) => acc + curr.count, 0);
+
+    // Calculate the percentage and degrees for each service type
+    const formatted = appointmentsType.map((item) => {
+      const percentage = ((item.count / totalAppointments) * 100).toFixed(2); // Percentage
+      const degrees = ((item.count / totalAppointments) * 360).toFixed(2); // Degrees for pie chart
+      return {
+        serviceType: item._id, // Type of service
+        count: item.count, // Count of appointments
+        percentage, // Percentage representation
+        degrees, // Degree representation for pie chart
+      };
+    });
+
+    // Send the response
+    res.status(200).json({
+      success: true,
+      totalAppointments,
+      data: formatted,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  getAllStats,
+  getMonthlyAppointments,
+  getMonthlySales,
+  getTotalAppointmentsServiceType,
+};
