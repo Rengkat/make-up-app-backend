@@ -134,7 +134,7 @@ const getTotalAppointmentsServiceType = async (req, res, next) => {
     const appointmentsType = await Appointments.aggregate([
       {
         $group: {
-          _id: "$type", // Group by service type
+          _id: "$type",
           count: { $sum: 1 }, // Count the number of appointments for each type
         },
       },
@@ -156,11 +156,66 @@ const getTotalAppointmentsServiceType = async (req, res, next) => {
     });
 
     // Send the response
-    res.status(200).json({
+    res.status(StatusCodes.OK).json({
       success: true,
       totalAppointments,
       data: formatted,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+const getAppointmentServices = async (req, res, next) => {
+  try {
+    const services = await Appointments.aggregate([
+      {
+        $group: {
+          _id: {
+            service: "$service",
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: {
+          "_id.year": -1,
+          "_id.month": -1,
+        },
+      },
+    ]);
+
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const totalServices = services.reduce((acc, curr) => acc + curr.count, 0);
+
+    const formatted = services.map((item) => {
+      const percentage = ((item.count / totalServices) * 100).toFixed(2);
+      const degrees = ((item.count / totalServices) * 360).toFixed(2);
+      return {
+        service: item._id.service,
+        year: item._id.year,
+        month: monthNames[item._id.month - 1],
+        count: item.count,
+        degrees,
+        percentage,
+      };
+    });
+
+    res.status(StatusCodes.OK).json({ success: true, data: formatted });
   } catch (error) {
     next(error);
   }
@@ -171,4 +226,5 @@ module.exports = {
   getMonthlyAppointments,
   getMonthlySales,
   getTotalAppointmentsServiceType,
+  getAppointmentServices,
 };
