@@ -107,5 +107,49 @@ const formatted=bestSelling.map((product)=>{
     next(error);
   }
 };
+const getTotalRevenue= async(req, res, next)=>{
+ try {
+    const monthlySales = await Orders.aggregate([
+      {
+        $match: { status: "paid" },
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" },
+          },
+          totalRevenue: { $sum: "$total" },
+        },
+      },
+      { $sort: { "_id.year": -1, "_id.month": -1 } },
+    ]);
 
-module.exports = { getOrderStats ,getAllOrdersOverTime, getBestSaleProduct};
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+
+    const formattedData = monthlySales.map((item) => ({
+      year: item._id.year,
+      month: monthNames[item._id.month - 1],
+      totalRevenue: item.totalRevenue,
+    }));
+
+    res.status(200).json({ success: true, data: formattedData });
+  } catch (error) {
+    next(error);
+  }
+
+}
+module.exports = { getOrderStats ,getAllOrdersOverTime, getBestSaleProduct,getTotalRevenue};
