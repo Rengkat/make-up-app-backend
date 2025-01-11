@@ -80,5 +80,70 @@ const getSalesByCategory = async (req, res, next) => {
     next(error);
   }
 };
+const getProductsAddedOverTime = async (req, res, next) => {
+  try {
+    const { startDate, endDate, groupBy } = req.query;
+
+    // Define the grouping period
+    let dateGroup;
+    if (groupBy === "day") {
+      dateGroup = {
+        year: { $year: "$createdAt" },
+        month: { $month: "$createdAt" },
+        day: { $dayOfMonth: "$createdAt" },
+      };
+    } else if (groupBy === "month") {
+      dateGroup = { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } };
+    } else if (groupBy === "year") {
+      dateGroup = { year: { $year: "$createdAt" } };
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid groupBy parameter. Use 'day', 'month', or 'year'.",
+      });
+    }
+
+    const productData = await Products.aggregate([
+      // Step 1: Filter products within the date range
+      {
+        $match: {
+          createdAt: {
+            $gte: new Date(startDate),
+            $lte: new Date(endDate),
+          },
+        },
+      },
+
+      // Step 2: Group products by the specified time period
+      {
+        $group: {
+          _id: dateGroup,
+          count: { $sum: 1 },
+        },
+      },
+
+      { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } },
+    ]);
+
+    // Format the data for the frontend
+    const formattedData = productData.map((item) => {
+      const { year, month, day } = item._id;
+      const dateLabel =
+        groupBy === "day"
+          ? `${year}-${month}-${day}`
+          : groupBy === "month"
+          ? `${year}-${month}`
+          : `${year}`;
+      return {
+        date: dateLabel,
+        count: item.count,
+      };
+    });
+
+    res.status(200).json({ success: true, data: formattedData });
+  } catch (error) {
+    next(error);
+  }
+};
 
 module.exports = { getProductStats, getSalesByCategory };
