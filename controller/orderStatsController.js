@@ -72,4 +72,40 @@ const getAllOrdersOverTime = async(req, res, next)=>{
     next(error);
   }
 }
-module.exports = { getOrderStats ,getAllOrdersOverTime};
+const getBestSaleProduct = async (req, res, next) => {
+  try {
+    const bestSelling = await Orders.aggregate([
+      {
+        
+        $match: { status: "paid" },
+      },
+      {
+    
+        $unwind: "$orderItems",
+      },
+      {
+       
+        $group: {
+          _id: "$orderItems.name",
+          totalSold: { $sum: "$orderItems.amount" }, 
+        },
+      },
+      {
+       
+        $sort: { totalSold: -1 },
+      },
+      {
+       
+        $limit: 10,
+      },
+    ]);
+const formatted=bestSelling.map((product)=>{
+  return{productName:product._id, totalSold:product.totalSold}
+})
+    res.status(200).json({ success: true, bestSelling:formatted });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getOrderStats ,getAllOrdersOverTime, getBestSaleProduct};
