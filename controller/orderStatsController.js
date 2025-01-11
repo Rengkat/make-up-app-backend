@@ -27,4 +27,49 @@ const getOrderStats = async (req, res, next) => {
     next(error);
   }
 };
+const getAllOrdersOverTime = async(req, res, next)=>{
+  try {
+    const monthlySales = await Orders.aggregate([
+      
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" },
+          },
+          totalSales: { $sum: "$total" },
+        },
+      },
+      // Sort by year and month in descending order
+      { $sort: { "_id.year": -1, "_id.month": -1 } },
+    ]);
+
+    // Array to map numeric months to names
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+
+    // Format the response to include month names
+    const formattedData = monthlySales.map((item) => ({
+      year: item._id.year,
+      month: monthNames[item._id.month - 1],
+      totalSales: item.totalSales,
+    }));
+
+    res.status(200).json({ success: true, data: formattedData });
+  } catch (error) {
+    next(error);
+  }
+}
 module.exports = { getOrderStats ,getAllOrdersOverTime};
