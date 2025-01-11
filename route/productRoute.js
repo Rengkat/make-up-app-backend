@@ -10,11 +10,13 @@ const {
 } = require("../controller/productController");
 const { getSingleProductReview } = require("../controller/reviewController");
 const { authenticateUser, authorizationPermission } = require("../middleware/authentication");
+const { getProductStats } = require("../controller/productStatsController");
 router
   .route("/")
   .get(getAllProducts)
   .post(authenticateUser, authorizationPermission, createProduct);
 router.route("/uploadImage").post(authenticateUser, authorizationPermission, uploadImage);
+router.route("/stats").get(authenticateUser, authorizationPermission, getProductStats);
 router
   .route("/:id")
   .get(getSingleProduct)
