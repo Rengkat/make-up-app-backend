@@ -1,7 +1,7 @@
 const Products = require("../model/productModel");
 const Orders = require("../model/orderModel");
 const { StatusCodes } = require("http-status-codes");
-
+const CustomError = require("../errors");
 const getProductStats = async (req, res, next) => {
   try {
     const totalProducts = await Products.countDocuments();
@@ -97,10 +97,7 @@ const getProductsAddedOverTime = async (req, res, next) => {
     } else if (groupBy === "year") {
       dateGroup = { year: { $year: "$createdAt" } };
     } else {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid groupBy parameter. Use 'day', 'month', or 'year'.",
-      });
+      throw new CustomError.BadRequestError("Invalid groupBy value. Use day, month, or year");
     }
 
     const productData = await Products.aggregate([
@@ -146,4 +143,4 @@ const getProductsAddedOverTime = async (req, res, next) => {
   }
 };
 
-module.exports = { getProductStats, getSalesByCategory };
+module.exports = { getProductStats, getSalesByCategory, getProductsAddedOverTime };
