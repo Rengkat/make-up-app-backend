@@ -21,4 +21,53 @@ const getAppointmentStats = async (req, res, next) => {
     next(error);
   }
 };
-module.exports = { getAppointmentStats };
+const getAppointmentByService = async (req, res, next) => {
+  try {
+    const data = await Appointments.aggregate([
+      {
+        $group: {
+          _id: "$service",
+          total: { $sum: 1 },
+        },
+      },
+    ]);
+    const totalAppointments = data.reduce((acc, item) => acc + item.total, 0);
+    const formattedData = data.map((item) => {
+      const percentage = ((item.total / totalAppointments) * 100).toFixed(2);
+      const degrees = ((item.total / totalAppointments) * 360).toFixed(2);
+      return { service: item._id, total: item.total, percentage, degrees };
+    });
+    res.status(StatusCodes.OK).json({
+      success: true,
+      formattedData,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getAppointmentByServiceType = async (req, res, next) => {
+  try {
+    const data = await Appointments.aggregate([
+      {
+        $group: {
+          _id: "$type",
+          total: { $sum: 1 },
+        },
+      },
+    ]);
+    const totalAppointments = data.reduce((acc, item) => acc + item.total, 0);
+    const formattedData = data.map((item) => {
+      const percentage = ((item.total / totalAppointments) * 100).toFixed(2);
+      const degrees = ((item.total / totalAppointments) * 360).toFixed(2);
+      return { serviceType: item._id, total: item.total, percentage, degrees };
+    });
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: formattedData,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+module.exports = { getAppointmentStats, getAppointmentByService, getAppointmentByServiceType };
