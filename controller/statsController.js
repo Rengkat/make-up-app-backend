@@ -220,11 +220,61 @@ const getAppointmentServices = async (req, res, next) => {
     next(error);
   }
 };
-
+const monthlyUserGrowth = async (req, res, next) => {
+  try {
+    const users = await User.aggregate([
+      {
+        $match: {
+          isVerified: true,
+        },
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: {
+          "_id.year": -1,
+          "_id.month": -1,
+        },
+      },
+    ]);
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const formatted = users.map((user) => {
+      return {
+        year: user._id.year,
+        month: monthNames[user._id.month - 1],
+        count: user.count,
+      };
+    });
+    res.status(StatusCodes.OK).json({ success: true, data: formatted });
+  } catch (error) {
+    next(error);
+  }
+};
 module.exports = {
   getAllStats,
   getMonthlyAppointments,
   getMonthlySales,
   getTotalAppointmentsServiceType,
   getAppointmentServices,
+  monthlyUserGrowth,
 };

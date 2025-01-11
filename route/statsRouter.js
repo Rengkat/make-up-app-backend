@@ -5,6 +5,7 @@ const {
   getMonthlySales,
   getTotalAppointmentsServiceType,
   getAppointmentServices,
+  monthlyUserGrowth,
 } = require("../controller/statsController");
 const { authenticateUser, authorizationPermission } = require("../middleware/authentication");
 const router = express.Router();
@@ -28,4 +29,5 @@ router.get(
   authorizationPermission,
   getAppointmentServices
 );
+router.get("/monthly-user-growth", authenticateUser, authorizationPermission, monthlyUserGrowth);
 module.exports = router;
